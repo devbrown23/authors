@@ -1,0 +1,807 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<style>body{margin:0;font:14px system-ui,sans-serif}img{max-width:100%}[hidden]{display:none!important}</style>
+</head>
+<body>
+<title>LSAT Gauntlet</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,800&family=Newsreader:opsz,wght@6..72,400;6..72,600&family=IBM+Plex+Mono:wght@400;600&display=swap">
+<style>
+/* Layout: one narrow column like a yellow legal pad. Dark binding strip on top, arguments written on ruled paper with the red margin line. */
+:root{
+  --pad:#F7EDA8; --paper:#FFFBDD; --ink:#1B2440; --muted:#565E7C; --rule:#B9CBE0; --margin:#CF3B45;
+  --ok:#17693F; --bad:#A82219; --bind:#1B2440; --bind-ink:#F7EDA8; --gold:#8A6400;
+  --display:"Bricolage Grotesque","Arial Narrow",Arial,sans-serif;
+  --read:"Newsreader",Georgia,"Times New Roman",serif;
+  --mono:"IBM Plex Mono",ui-monospace,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
+  --pad:#131829; --paper:#1C2340; --ink:#F3ECC2; --muted:#A4AAC6; --rule:#2F3A63; --margin:#F0666E;
+  --ok:#62D098; --bad:#FF8F85; --bind:#0B0F1C; --bind-ink:#F7EDA8; --gold:#F0C95A; color-scheme:dark } }
+:root[data-theme="dark"]{
+  --pad:#131829; --paper:#1C2340; --ink:#F3ECC2; --muted:#A4AAC6; --rule:#2F3A63; --margin:#F0666E;
+  --ok:#62D098; --bad:#FF8F85; --bind:#0B0F1C; --bind-ink:#F7EDA8; --gold:#F0C95A; color-scheme:dark }
+*{box-sizing:border-box}
+body{background:var(--pad);color:var(--ink);font-family:var(--display);font-size:16px;line-height:1.45}
+.wrap{max-width:720px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+header{background:var(--bind);color:var(--bind-ink)}
+header .wrap{padding-block:14px 12px;display:flex;flex-wrap:wrap;gap:8px 20px;align-items:flex-end;justify-content:space-between}
+h1{font-size:28px;font-weight:800;letter-spacing:-.02em;margin:0;line-height:1}
+h1 small{display:block;font-family:var(--mono);font-size:11px;font-weight:400;letter-spacing:.12em;text-transform:uppercase;opacity:.75;margin-top:6px}
+.hud{display:flex;gap:16px;font-family:var(--mono);font-size:12px;font-variant-numeric:tabular-nums}
+.hud b{display:block;font-size:18px;font-weight:600}
+.hud span{opacity:.75;text-transform:uppercase;letter-spacing:.08em;font-size:10px}
+.xpbar{height:5px;background:var(--bind);border-top:1px solid var(--rule)}
+.xpbar i{display:block;height:100%;background:var(--margin);transition:width .4s}
+nav{border-bottom:2px solid var(--ink)}
+nav .wrap{display:flex;gap:0}
+nav a{flex:1;text-align:center;padding:12px 4px;font-weight:600;font-size:14px;color:var(--muted);text-decoration:none;border-bottom:4px solid transparent;margin-bottom:-2px}
+nav a[aria-current]{color:var(--ink);border-bottom-color:var(--margin)}
+main.wrap{padding-block:22px 60px;display:flex;flex-direction:column;gap:22px}
+h2{font-size:22px;font-weight:800;letter-spacing:-.01em;margin:0;text-wrap:balance}
+h3{font-size:16px;font-weight:800;margin:0}
+p{margin:0}
+.lbl{font-family:var(--mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.muted{color:var(--muted)}
+.row{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.stack{display:flex;flex-direction:column;gap:10px}
+.strip{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));border:2px solid var(--ink)}
+.strip div{padding:10px 12px;border-right:1px solid var(--rule);min-width:0}
+.strip div:last-child{border-right:0}
+.strip b{display:block;font-family:var(--mono);font-size:22px;font-variant-numeric:tabular-nums}
+.meter{height:10px;border:2px solid var(--ink);background:var(--paper)}
+.meter i{display:block;height:100%;background:var(--ink)}
+button,.btn{font:inherit;font-weight:600;color:var(--ink);background:var(--paper);border:2px solid var(--ink);padding:11px 16px;cursor:pointer;text-align:left;text-decoration:none;display:inline-block}
+button:hover{box-shadow:3px 3px 0 var(--ink)}
+button:disabled{opacity:.45;cursor:default;box-shadow:none}
+button.primary{background:var(--ink);color:var(--pad)}
+button.primary:hover{box-shadow:3px 3px 0 var(--margin)}
+:focus-visible{outline:3px solid var(--margin);outline-offset:2px}
+.modes{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px}
+.modes button{display:flex;justify-content:space-between;gap:10px;align-items:baseline;width:100%}
+.modes button span{font-family:var(--mono);font-size:12px;font-weight:400;color:var(--muted);white-space:nowrap}
+.modes button.done span{color:var(--ok);font-weight:600}
+.big{display:flex;flex-wrap:wrap;gap:10px}
+.big button{flex:1 1 220px;padding:16px}
+.big button small{display:block;font-weight:400;font-size:13px;opacity:.8;margin-top:2px}
+/* ruled paper */
+.ruled{font-family:var(--read);font-size:18px;line-height:28px;background:var(--paper);
+  background-image:linear-gradient(90deg,transparent 30px,var(--margin) 30px,var(--margin) 31px,transparent 31px,transparent 34px,var(--margin) 34px,var(--margin) 35px,transparent 35px),
+  repeating-linear-gradient(transparent 0,transparent 27px,var(--rule) 27px,var(--rule) 28px);
+  padding:28px 16px 28px 48px;border:1px solid var(--rule);min-width:0}
+.ruled p+p{margin-top:28px}
+details.ruled summary{font-family:var(--mono);font-size:12px;letter-spacing:.1em;text-transform:uppercase;cursor:pointer;line-height:28px}
+.stem{font-family:var(--read);font-size:19px;font-weight:600;line-height:1.4}
+.gate{border:2px dashed var(--ink);padding:16px;display:flex;flex-direction:column;gap:12px;align-items:flex-start}
+.choices{display:flex;flex-direction:column;gap:8px}
+.choice{display:grid;grid-template-columns:28px 1fr;gap:8px;width:100%;font-family:var(--read);font-size:17px;font-weight:400;line-height:1.4;padding:12px}
+.choice .L{font-family:var(--mono);font-weight:600;font-size:14px;line-height:24px}
+.choice[aria-pressed="true"]{background:var(--ink);color:var(--pad)}
+.choice.right{border-color:var(--ok);box-shadow:inset 0 0 0 2px var(--ok);opacity:1}
+.choice.wrong{border-color:var(--bad);box-shadow:inset 0 0 0 2px var(--bad);opacity:1}
+.choice.dim{opacity:.8}
+.choice:disabled{opacity:1}
+.choice.dim:disabled{opacity:.8}
+.note{grid-column:2;font-family:var(--display);font-size:14px;margin-top:6px;color:var(--muted)}
+.right .note{color:var(--ok)} .wrong .note{color:var(--bad)}
+.verdict{padding:14px 16px;border:2px solid var(--ink);display:flex;flex-direction:column;gap:6px}
+.verdict.ok{border-color:var(--ok)} .verdict.no{border-color:var(--bad)}
+.verdict h3{font-size:20px} .ok h3{color:var(--ok)} .no h3{color:var(--bad)}
+.clock{display:grid;grid-template-columns:repeat(4,1fr);background:var(--bind);color:var(--bind-ink);border:2px solid var(--ink)}
+.clock div{padding:14px 4px;text-align:center;border-right:1px solid var(--rule);min-width:0}
+.clock div:last-child{border-right:0}
+.clock b{display:block;font-family:var(--mono);font-size:clamp(24px,8vw,40px);font-weight:600;font-variant-numeric:tabular-nums;line-height:1.1}
+.clock span{font-family:var(--mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;opacity:.75}
+.chip{padding:7px 10px;font-size:13px}.chip[aria-pressed="true"]{background:var(--ink);color:var(--pad)}
+.flash{width:100%;min-height:190px;display:flex;flex-direction:column;gap:12px;justify-content:center;font-family:var(--read);font-size:18px;line-height:1.4;font-weight:400}
+.flash b{font-family:var(--display);font-size:26px;font-weight:800;line-height:1.1}
+.hooks{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:10px}
+.hooks .card p{font-family:var(--read);font-size:17px;line-height:1.4}
+.xp{font-family:var(--mono);font-size:13px;color:var(--gold);font-weight:600}
+.pips{display:flex;gap:6px}
+.pips i{width:22px;height:8px;border:2px solid var(--ink);background:var(--paper)}
+.pips i.y{background:var(--ok);border-color:var(--ok)} .pips i.n{background:var(--bad);border-color:var(--bad)} .pips i.cur{background:var(--ink)}
+.card{border:2px solid var(--ink);background:var(--paper);padding:16px;display:flex;flex-direction:column;gap:10px;min-width:0}
+.card dl{margin:0;display:grid;grid-template-columns:76px 1fr;gap:8px 12px;font-size:15px}
+.card dt{font-family:var(--mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);padding-top:3px}
+.card dd{margin:0;min-width:0}
+ol.rules{margin:0;padding-left:22px;display:flex;flex-direction:column;gap:10px;font-family:var(--read);font-size:18px;line-height:1.4}
+ol.rules b{font-family:var(--display)}
+.phase{display:grid;grid-template-columns:110px 1fr;gap:6px 14px;padding:14px 0;border-top:1px solid var(--rule)}
+.phase.now{border-top:3px solid var(--margin)}
+.phase .when{font-family:var(--mono);font-size:12px;color:var(--muted)}
+.phase.now .when{color:var(--margin);font-weight:600}
+.check{display:flex;gap:10px;align-items:flex-start;font-size:16px}
+.check input{width:20px;height:20px;margin:2px 0 0;accent-color:var(--ink);flex:none}
+input[type=date]{font:inherit;font-family:var(--mono);padding:9px 10px;border:2px solid var(--ink);background:var(--paper);color:var(--ink)}
+.bars{display:grid;grid-template-columns:minmax(110px,170px) 1fr 52px;gap:8px 12px;align-items:center;font-size:14px}
+.bars .n{font-family:var(--mono);font-variant-numeric:tabular-nums;text-align:right;font-size:13px}
+a{color:inherit}
+@media (max-width:460px){ nav a{font-size:13px;padding:12px 2px} .phase{grid-template-columns:1fr} h1{font-size:24px} .hud{gap:12px} .ruled{font-size:17px;padding-left:44px} }
+@media (prefers-reduced-motion:reduce){ *{transition:none!important} }
+</style>
+
+<header><div class="wrap">
+  <h1>LSAT Gauntlet<small>Slow down. Predict. Get it right.</small></h1>
+  <div class="hud" id="hud"></div>
+</div><div class="xpbar"><i id="xpbar" style="width:0"></i></div></header>
+<nav><div class="wrap">
+  <a href="#drill">Drill</a><a href="#playbook">Playbook</a><a href="#memory">Memory</a><a href="#plan">Plan</a><a href="#progress">Progress</a>
+</div></nav>
+<main class="wrap" id="app"></main>
+
+<script>
+const TYPES={
+ term:{n:"Terminology",ask:"Do you know the test's own vocabulary cold?",move:"Define the term in your own words before you look. If you can't, flip its flashcard in Memory first.",trap:"Two definitions that sound alike. Premise and assumption, sufficient and necessary, some and most."},
+ cond:{n:"If-Then Translation",ask:"Which way does the arrow point?",move:"Find the indicator word. Decide which side is the guarantee and which is the requirement, then write the arrow before you look.",trap:"The arrow drawn backwards. 'Only' and 'unless' point to the requirement, not the trigger."},
+ flaw:{n:"Flaw",ask:"Why doesn't the evidence prove the conclusion?",move:"Find the conclusion, then say out loud what the author assumed without earning it. That gap is the answer.",trap:"Choices that describe a real flaw the argument never committed. Check: did the author actually do this?"},
+ na:{n:"Necessary Assumption",ask:"What must be true for this argument to have a chance?",move:"Negate the choice. If the argument falls apart, that's the one. Prefer modest wording: 'some', 'at least part'.",trap:"Strong answers that would help the argument but aren't required."},
+ sa:{n:"Sufficient Assumption",ask:"What extra premise would make the conclusion airtight?",move:"Find the new term in the conclusion. Bridge it to the premises: 'If [premise term], then [conclusion term].'",trap:"The bridge built backwards, or weakened to 'most' or 'some'."},
+ str:{n:"Strengthen",ask:"Which new fact makes the conclusion more likely?",move:"Name the gap first. For cause claims, look for: no cause means no effect, or an alternative cause ruled out.",trap:"Facts that sound on-topic but leave the gap exactly where it was."},
+ weak:{n:"Weaken",ask:"Which new fact makes the conclusion less likely?",move:"Accept the premises. Attack the jump to the conclusion, usually with another explanation for the same evidence.",trap:"Choices that attack a premise, or weaken a claim the author never made."},
+ mbt:{n:"Must Be True",ask:"What do these facts prove, with no outside help?",move:"Chain the statements. Take contrapositives. Pick the choice you could defend in court using only the text.",trap:"Reversals, negations, and anything stronger than the facts ('all' when you were given 'most')."},
+ mc:{n:"Main Conclusion",ask:"What is the author trying to convince you of?",move:"Ask 'why?' of each claim. The conclusion is the one everything else supports. It often follows 'but' or 'yet'.",trap:"A premise restated accurately. True to the text, but it's support, not the point."},
+ para:{n:"Paradox",ask:"How can both surprising facts be true?",move:"State the conflict in one sentence. The answer adds a fact that makes both sides expected.",trap:"Choices that explain only one side, or make the puzzle worse."},
+ par:{n:"Parallel Reasoning",ask:"Which argument has the same skeleton?",move:"Strip the topic. Write the form (if A then B, not B, so not A). Match validity, then match form.",trap:"Same subject matter with a different logical shape."},
+ meth:{n:"Method and Role",ask:"What is this speaker, or this sentence, doing?",move:"Label each sentence: premise, conclusion, sub-conclusion, opposing view. Then match the abstract description.",trap:"Descriptions that are half right. Every word of the choice has to fit."},
+ prin:{n:"Principle",ask:"Which rule matches or justifies this situation?",move:"Turn the rule into if-then. Check that the case meets the 'if' and the judgment matches the 'then'.",trap:"A rule that says 'only if' when you need 'if', or the reverse."},
+ rc:{n:"Reading Comp",ask:"What did the author say, and why did they say it?",move:"After each paragraph, say its job in five words. Before the questions, state the main point and the author's attitude.",trap:"Choices that are true in the world but not in the passage, or that turn a mild claim into an extreme one."}
+};
+const P={
+A:{title:"Two ways to read a statute",text:[
+`Judges who interpret statutes often describe their task as a choice between two methods. Textualists hold that a court should apply the ordinary meaning of a statute's words as they would have been understood when enacted. Purposivists hold that a court should read those words in light of the goal the legislature was trying to achieve. The two camps are usually presented as rivals, and each has a standard complaint about the other: textualists charge that purposivism lets judges substitute their own policy preferences for the legislature's, while purposivists reply that textualism produces results no legislator could have wanted.`,
+`This picture of rivalry is overdrawn. In the great majority of cases the words of a statute and its evident purpose point the same way, and judges of both schools reach the same result with little difficulty. The methods diverge only in a narrow band of cases: those in which the language is clear but its application yields an outcome that seems to defeat the statute's aim. Even there, the disagreement is less about what interpretation is than about which kind of judicial error is more tolerable. The textualist would rather enforce a badly drafted law as written and leave the repair to the legislature; the purposivist would rather repair it at once and risk repairing it wrongly.`,
+`Seen this way, the debate is not one that evidence about language can settle. It turns on a judgment about institutions: how quickly legislatures in fact correct their mistakes, and how reliably judges can identify a purpose that hundreds of legislators, with differing motives, are supposed to have shared.`]},
+B:{title:"What a wrong date can tell you",text:[
+`For much of the twentieth century, professional historians treated oral testimony with suspicion. Memory, they pointed out, fades and reshapes itself; a witness interviewed forty years after a strike or a migration may report what she has since read or been told rather than what she saw. Documents, by contrast, were fixed at the time of the events they record. On this view, oral accounts were at best a supplement, to be used only where the written record was silent and discarded wherever the two conflicted.`,
+`Later historians have challenged this ranking, and not merely by observing that documents have biases of their own, though they do, since letters, ledgers, and official reports were written by particular people for particular ends, and overwhelmingly by those with the power to have their version preserved. The more interesting challenge concedes that oral testimony is often inaccurate about dates and sequences and then asks what the inaccuracies reveal. When many witnesses independently misdate the same event in the same direction, placing a factory killing, for instance, during a later and more famous protest, the error is not noise. It shows how a community has come to understand the event, which episode it has attached the death to, and why.`,
+`This approach does not ask historians to believe everything they are told. It asks them to recognize that an oral account is evidence of two things at once: of what happened, about which it may be unreliable, and of what the events came to mean, about which it may be the best source available.`]},
+C:{title:"When a result won't repeat",text:[
+`When a striking experimental result in psychology is published, other laboratories sometimes try to repeat the experiment and fail to obtain the same result. Such failures have multiplied in recent years, and they are often taken as proof that the original finding was false: the product of chance, of a sample that was too small, or of researchers who, consciously or not, analyzed their data until something publishable emerged.`,
+`That inference is sometimes warranted, but it is drawn too quickly. A replication is itself an experiment, and it can fail for reasons that have nothing to do with the truth of the original claim. The second team may test a different population, translate materials imperfectly, or omit a detail of procedure that the original authors never thought to report because they did not know it mattered. A single failed replication therefore tells us that two studies disagree; it does not tell us which is wrong.`,
+`None of this is a defense of the original findings. The same considerations cut both ways: if small differences in procedure can erase an effect, then the effect is at best fragile and far narrower than the sweeping claim that accompanied its publication. The proper response to a failed replication is neither to discard the finding nor to shield it, but to conduct a series of replications, designed jointly by proponents and skeptics, that varies the conditions systematically. Only such a series can show whether an effect is real and, if it is real, how far it extends.`]}
+};
+const Q=[
+{id:"f1",t:"flaw",d:1,s:`Every time the city has added a bike lane to a street, the number of cycling accidents reported on that street has gone up. So bike lanes make cycling more dangerous.`,q:`The reasoning is flawed because the argument`,a:0,c:[
+ [`treats a rise in the total number of accidents as a rise in each cyclist's risk, without considering that more people may be cycling there`,`Right. A lane attracts riders. More riders can mean more accidents even if each ride got safer.`],
+ [`draws a general conclusion from a sample that is too small to be reliable`,`The evidence covers every street that got a lane. Sample size isn't the problem.`],
+ [`assumes that what is true of the city as a whole is true of each of its streets`,`The evidence is already street by street. No whole-to-part move happens.`],
+ [`attacks the motives of those who support bike lanes`,`Nobody's motives are mentioned.`],
+ [`takes for granted that cycling accidents were common before the lanes were added`,`The argument needs accidents to rise, not to have been common before.`]]},
+{id:"f2",t:"flaw",d:2,s:`Critic: Senator Okafor argues that the new water tax will reduce waste. But Okafor owns shares in a company that sells water-saving appliances. Her argument should therefore be rejected.`,q:`The critic's reasoning is most vulnerable to criticism because it`,a:2,c:[
+ [`fails to consider that the tax might reduce waste only slightly`,`The critic isn't arguing about how much waste falls. The critic never touches the tax's effects at all.`],
+ [`assumes that anyone who owns shares in a company agrees with all of its practices`,`Nothing here depends on Okafor agreeing with the company.`],
+ [`rejects an argument because of the arguer's possible motive rather than because of any weakness in the argument itself`,`Right. A self-interested speaker can still be correct. The critic never engages the claim.`],
+ [`relies on an appeal to the opinion of an expert who lacks relevant expertise`,`No expert is cited.`],
+ [`confuses a condition that is required for reducing waste with one that guarantees it`,`There is no conditional reasoning to confuse.`]]},
+{id:"f3",t:"flaw",d:2,s:`No study has shown that the supplement kavrin causes any harm. Therefore kavrin is safe to take.`,q:`Which one of the following most accurately describes a flaw in the argument?`,a:4,c:[
+ [`It assumes that a supplement that is safe for some people is safe for everyone.`,`The argument never establishes that it is safe for anyone.`],
+ [`It mistakes a cause of harm for an effect of harm.`,`No cause and effect get swapped.`],
+ [`It uses the word "harm" in two different senses.`,`"Harm" means the same thing throughout.`],
+ [`It relies on studies that were funded by the maker of kavrin.`,`Funding is never mentioned. Don't add facts.`],
+ [`It treats the absence of evidence that a claim is true as proof that the claim is false.`,`Right. Maybe nobody has studied kavrin. No evidence of harm is not evidence of safety.`]]},
+{id:"f4",t:"flaw",d:3,s:`Anyone who finishes the Ridgeline Marathon in under three hours has trained for at least six months. Tomas has trained for eight months. So Tomas will finish the Ridgeline Marathon in under three hours.`,q:`The reasoning in the argument is flawed in that it`,a:1,c:[
+ [`overlooks the possibility that Tomas trained harder than other runners`,`That would help the conclusion, and it isn't the logical error.`],
+ [`treats something that is required for a result as though it were enough to guarantee that result`,`Right. Fast finish requires six months of training. Training doesn't guarantee a fast finish.`],
+ [`infers what will happen to one runner from what happened to a group of runners on average`,`The premise is about all fast finishers, not an average.`],
+ [`fails to define what counts as training`,`Vague, and not what breaks the logic.`],
+ [`concludes that one event caused another merely because it came first`,`This is a conditional error, not a timing-based causal claim.`]]},
+{id:"n1",t:"na",d:2,s:`Museum attendance dropped sharply last year, right after the museum raised its ticket prices. So if the museum returns to its old prices, attendance will recover.`,q:`The argument requires assuming which one of the following?`,a:1,c:[
+ [`Returning to the old prices would not cost the museum more money than it would bring in.`,`The conclusion is about attendance, not profit.`],
+ [`The price increase was at least part of the reason attendance dropped.`,`Right. Negate it: price had nothing to do with the drop. Then lowering prices gives no reason to expect recovery.`],
+ [`The museum's old prices were lower than those of every other museum nearby.`,`Far too strong. The argument can work without this.`],
+ [`Attendance did not drop at any other museum last year.`,`Other museums could have dropped too and price could still be the cause here.`],
+ [`The museum would have closed if it had not raised prices.`,`Irrelevant to whether attendance will recover.`]]},
+{id:"n2",t:"na",d:3,s:`Fossil teeth of an extinct lizard show the heavy wear typical of animals that eat hard-shelled prey. So this lizard must have fed mainly on hard-shelled prey.`,q:`Which one of the following is an assumption on which the argument depends?`,a:3,c:[
+ [`Hard-shelled prey was more plentiful than soft-bodied prey where the lizard lived.`,`Helpful maybe, but the lizard could eat shells even where they were scarce.`],
+ [`No living lizard feeds mainly on hard-shelled prey.`,`Living lizards don't matter to the argument.`],
+ [`All animals that eat hard-shelled prey show heavy tooth wear.`,`This is the reverse of what's needed. The argument goes from wear to diet.`],
+ [`The wear on the teeth was not caused mainly by grit the lizard swallowed along with soft food.`,`Right. If grit did it, the wear tells you nothing about shells. The argument must rule that out.`],
+ [`The fossil teeth all came from a single lizard.`,`One lizard or many, the reasoning is the same.`]]},
+{id:"n3",t:"na",d:2,s:`The new scheduling app must be easy to use, since most of its users have given it a five-star rating.`,q:`The argument depends on the assumption that`,a:0,c:[
+ [`at least some of those ratings reflect how easy the users found the app to use`,`Right. Negate it: none of the ratings have anything to do with ease of use. The evidence becomes worthless.`],
+ [`apps that are easy to use always receive five-star ratings`,`Reversed, and far stronger than the argument needs.`],
+ [`no user has found the app difficult to use`,`"Most" loved it. A few strugglers wouldn't sink the argument.`],
+ [`the app is easier to use than its competitors`,`No comparison is being made.`],
+ [`most of the app's users have also rated other apps`,`Irrelevant.`]]},
+{id:"s1",t:"sa",d:2,s:`All of the paintings in the east gallery are on loan from other institutions. Therefore, the museum cannot sell any of the paintings in the east gallery.`,q:`The conclusion follows logically if which one of the following is assumed?`,a:1,c:[
+ [`Any painting the museum cannot sell is on loan from another institution.`,`Backwards. You need on loan leads to can't sell.`],
+ [`The museum cannot sell any painting that is on loan from another institution.`,`Right. East gallery, so on loan. On loan, so can't sell. Airtight.`],
+ [`Some paintings on loan from other institutions cannot be sold by the museum.`,`"Some" leaves room for east gallery paintings to be sellable.`],
+ [`The museum has never sold a painting.`,`"Has never" doesn't prove "cannot".`],
+ [`Paintings in the west gallery are owned by the museum.`,`Wrong gallery.`]]},
+{id:"s2",t:"sa",d:3,s:`Marcus has read news coverage of the Haller case. Anyone who has read news coverage of a case has formed an opinion about it. Therefore, Marcus is not eligible to serve as a juror in the Haller case.`,q:`Which one of the following, if assumed, allows the conclusion to be properly drawn?`,a:4,c:[
+ [`Anyone who is not eligible to serve as a juror in a case has formed an opinion about it.`,`Backwards. This starts from ineligible, which is where you need to end.`],
+ [`Most people who have formed an opinion about a case are not eligible to serve as jurors in it.`,`"Most" doesn't guarantee Marcus is one of them.`],
+ [`Marcus's opinion is that the defendant in the Haller case is guilty.`,`Still no rule connecting opinions to eligibility.`],
+ [`Everyone who has not read news coverage of a case is eligible to serve as a juror in it.`,`This is about people who haven't read coverage. Marcus has.`],
+ [`No one who has formed an opinion about a case is eligible to serve as a juror in it.`,`Right. Read coverage, so opinion. Opinion, so not eligible.`]]},
+{id:"st1",t:"str",d:1,s:`Students at Linden School who eat breakfast at school score higher on morning tests than students who do not. The school concludes that its breakfast program improves test performance.`,q:`Which one of the following, if true, most strengthens the school's conclusion?`,a:2,c:[
+ [`Students who eat breakfast at school tend to come from families that place unusual emphasis on studying.`,`This weakens. It offers family background as the real cause.`],
+ [`The breakfast program costs the school less than its lunch program.`,`Cost has nothing to do with test scores.`],
+ [`When the program was suspended for a month, the scores of students who normally ate breakfast at school fell, then rose again when it resumed.`,`Right. Take away the cause and the effect disappears. Same students, so background can't explain it.`],
+ [`Several other schools in the district also offer breakfast.`,`Says nothing about whether breakfast raises scores.`],
+ [`Some students who eat breakfast at school also eat breakfast at home.`,`Doesn't help show the school program is what matters.`]]},
+{id:"st2",t:"str",d:2,s:`A town installed brighter streetlights on Elm Avenue, and nighttime car break-ins there fell by half the following year. Town officials conclude that the brighter lights deterred thieves.`,q:`Which one of the following, if true, most supports the officials' conclusion?`,a:0,c:[
+ [`Break-ins on comparable nearby streets that got no new lights did not fall during the same year.`,`Right. This rules out a general drop in crime as the explanation.`],
+ [`Police patrols on Elm Avenue doubled during the same year.`,`Weakens. Patrols are a rival cause.`],
+ [`Car break-ins fell by about half throughout the region that year.`,`Weakens. The drop happened everywhere, lights or not.`],
+ [`Most Elm Avenue residents say they prefer the brighter lights.`,`Popularity isn't deterrence.`],
+ [`The brighter lights use more electricity than the old ones.`,`Irrelevant.`]]},
+{id:"w1",t:"weak",d:1,s:`People who own dogs walk more each day than people who do not. So getting a dog would cause a sedentary person to become more active.`,q:`Which one of the following, if true, most weakens the argument?`,a:3,c:[
+ [`Larger dog breeds need more exercise than smaller breeds.`,`If anything this fits the idea that dogs make owners walk.`],
+ [`People who own cats walk no more than people who own no pets.`,`Cats aren't dogs. The argument is untouched.`],
+ [`Walking regularly is good for the heart.`,`Benefits of walking aren't at issue.`],
+ [`People who already enjoy walking are far more likely than others to choose to get a dog.`,`Right. Walkers pick dogs. The dog may not be what causes the walking, so a sedentary person might not change.`],
+ [`Dog ownership has risen steadily for a decade.`,`A trend in ownership says nothing about cause.`]]},
+{id:"w2",t:"weak",d:2,s:`A company switched to a four-day workweek, and in the following quarter its output per employee rose. The CEO concludes that shorter weeks make employees more productive.`,q:`Which one of the following, if true, most undermines the CEO's conclusion?`,a:1,c:[
+ [`Most employees say they prefer the four-day schedule.`,`Happy employees are consistent with the CEO's story.`],
+ [`At the start of that quarter the company also replaced its outdated equipment with much faster machinery.`,`Right. A second change at the same time gives another explanation for the rise.`],
+ [`A competitor that kept a five-day week saw no change in output per employee.`,`This strengthens. It makes an industry-wide rise less likely.`],
+ [`The company's total hours worked fell during the quarter.`,`Expected with a shorter week. Doesn't explain higher output per person.`],
+ [`In some other industries, output per employee is hard to measure.`,`Other industries are beside the point.`]]},
+{id:"w3",t:"weak",d:3,s:`Archaeologists found coins minted during the reign of King Aldric in the lowest layer of a ruined fort. They conclude that the fort was built during Aldric's reign.`,q:`Which one of the following, if true, most weakens the archaeologists' reasoning?`,a:4,c:[
+ [`The fort was built with stone from a local quarry.`,`Where the stone came from says nothing about when.`],
+ [`Coins found in the fort's upper layers were minted under later rulers.`,`Fits the archaeologists' timeline.`],
+ [`Aldric is known to have built several forts elsewhere in the kingdom.`,`Strengthens, if anything.`],
+ [`Few written records survive from the period.`,`Explains why they rely on coins. Doesn't hurt the inference.`],
+ [`Coins minted under Aldric remained in everyday use for more than a century after his death.`,`Right. The coins could have been dropped long after Aldric died, so they don't date the fort to his reign.`]]},
+{id:"m1",t:"mbt",d:1,s:`Everyone on the debate team takes Latin. No one who takes Latin takes shop class. Priya is on the debate team.`,q:`If the statements above are true, which one of the following must also be true?`,a:2,c:[
+ [`Everyone who takes Latin is on the debate team.`,`Reversal of the first statement.`],
+ [`Anyone who does not take shop class takes Latin.`,`Reversal of the second statement.`],
+ [`Priya does not take shop class.`,`Right. Debate, so Latin. Latin, so no shop.`],
+ [`Priya is the strongest member of the debate team.`,`Nothing about ranking.`],
+ [`Some debate team members take shop class.`,`This contradicts the chain.`]]},
+{id:"m2",t:"mbt",d:2,s:`Most of the houses on Wren Street were built before 1950. Every house on Wren Street that was built before 1950 has a slate roof.`,q:`Which one of the following can be properly inferred from the statements above?`,a:0,c:[
+ [`Most of the houses on Wren Street have slate roofs.`,`Right. More than half are pre-1950, and every one of those has slate.`],
+ [`No house on Wren Street built after 1950 has a slate roof.`,`Negation. Newer houses might have slate too.`],
+ [`Most houses with slate roofs were built before 1950.`,`This is about all slate-roofed houses everywhere.`],
+ [`Every house on Wren Street has a slate roof.`,`You only know about most.`],
+ [`Slate roofs last longer than other roofs.`,`Outside knowledge. Not in the facts.`]]},
+{id:"m3",t:"mbt",d:3,s:`If the levy passes, the library will open on Sundays. If the library opens on Sundays, it must hire two more clerks. The library cannot hire more clerks unless the council approves a new budget, and the council will not approve one.`,q:`If the statements above are true, which one of the following must be true?`,a:3,c:[
+ [`The council opposes the levy.`,`The council refused a budget. Its view of the levy is unknown.`],
+ [`The library has been open on Sundays in the past.`,`Nothing about the past.`],
+ [`If the council had approved a new budget, the levy would have passed.`,`A budget is needed for hiring. It doesn't guarantee anything about the levy.`],
+ [`The levy will not pass.`,`Right. No budget, so no clerks. No clerks, so no Sundays. No Sundays, so no levy. Contrapositives all the way back.`],
+ [`The library has too few clerks to operate on weekdays.`,`Weekdays aren't discussed.`]]},
+{id:"mc1",t:"mc",d:2,s:`Some argue that the city should sell the old rail yard to developers. But this would be a mistake. The yard is the only large parcel left where a park could be built, and the neighborhoods around it have less green space than any others in the city. Besides, the sale price would cover barely a month of the city's budget.`,q:`Which one of the following most accurately expresses the main conclusion of the argument?`,a:1,c:[
+ [`The rail yard is the only large parcel left where a park could be built.`,`A premise. It supports the conclusion.`],
+ [`The city should not sell the old rail yard to developers.`,`Right. "This would be a mistake" is the claim everything else supports.`],
+ [`The city should build a park on the old rail yard.`,`Tempting, but the author only argues against selling.`],
+ [`The neighborhoods around the rail yard have less green space than any others.`,`A premise.`],
+ [`The sale price of the rail yard would be too low to matter.`,`A premise, introduced by "besides".`]]},
+{id:"mc2",t:"mc",d:2,s:`It is often said that memory works like a video recorder. Yet people regularly "remember" details that were suggested to them only after an event took place, and they do so with complete confidence. Clearly, then, memory is not a faithful recording, since a recording could not be altered by later suggestion.`,q:`The main conclusion of the argument is that`,a:4,c:[
+ [`memory is often said to work like a video recorder`,`This is the view the author argues against.`],
+ [`people remember suggested details with complete confidence`,`Evidence.`],
+ [`a recording could not be altered by later suggestion`,`A premise, flagged by "since".`],
+ [`people should not trust their memories`,`The author never gives advice.`],
+ [`memory is not a faithful recording of events`,`Right. "Clearly, then" announces it, and "since" introduces its support.`]]},
+{id:"p1",t:"para",d:2,s:`A city lowered the speed limit on its main highway in order to reduce fatal crashes. Over the following year, average speeds on the highway did fall, yet the number of fatal crashes in the city rose.`,q:`Which one of the following, if true, most helps to resolve the apparent discrepancy?`,a:0,c:[
+ [`Many drivers avoided the slower highway by switching to narrow side streets, where crashes are more likely to be fatal.`,`Right. The highway got slower, and the danger moved somewhere worse. Both facts now make sense.`],
+ [`Other cities that lowered highway speed limits saw fewer fatal crashes.`,`Makes this city's result more puzzling.`],
+ [`Police issued more speeding tickets on the highway that year.`,`Explains the lower speeds only.`],
+ [`Most drivers in the city supported the lower limit.`,`Opinion doesn't explain crashes.`],
+ [`Cars on the highway were newer on average than in previous years.`,`Newer cars should mean fewer deaths.`]]},
+{id:"p2",t:"para",d:2,s:`A restaurant raised the price of every dish on its menu by 20 percent. Its regular customers kept coming just as often as before, yet the restaurant's total revenue fell.`,q:`Which one of the following, if true, most helps to explain the result described above?`,a:2,c:[
+ [`The cost of the restaurant's ingredients rose that year.`,`Costs affect profit. The puzzle is about revenue.`],
+ [`A restaurant across town also raised its prices.`,`Doesn't explain a drop here.`],
+ [`After the increase, customers typically ordered fewer dishes per visit, skipping appetizers and desserts.`,`Right. Same visits, higher prices, but smaller orders. Revenue can fall.`],
+ [`The restaurant hired a new chef shortly before the increase.`,`No link to revenue is given.`],
+ [`Regular customers account for most of the restaurant's revenue.`,`Makes the drop harder to explain.`]]},
+{id:"pa1",t:"par",d:3,s:`If it rained last night, the lawn is wet. The lawn is not wet. So it did not rain last night.`,q:`Which one of the following arguments is most similar in its reasoning to the argument above?`,a:3,c:[
+ [`If Lena took the express train, she arrived by noon. She arrived by noon. So she took the express train.`,`Affirms the "then" part. Invalid, and a different form.`],
+ [`If Lena took the express train, she arrived by noon. She did not take the express train. So she did not arrive by noon.`,`Denies the "if" part. Invalid.`],
+ [`Most people who take the express train arrive by noon. Lena took it. So she arrived by noon.`,`"Most" reasoning. Different form.`],
+ [`If Lena took the express train, she arrived by noon. She did not arrive by noon. So she did not take the express train.`,`Right. If A then B. Not B. So not A.`],
+ [`If Lena took the express train, she arrived by noon. If she arrived by noon, she made the meeting. So if she took the express train, she made the meeting.`,`Valid, but a chain of two conditionals. Different shape.`]]},
+{id:"pa2",t:"par",d:3,s:`All surgeons have steady hands. Ravi has steady hands. So Ravi is a surgeon.`,q:`The flawed reasoning in which one of the following is most similar to that in the argument above?`,a:1,c:[
+ [`All sonnets have fourteen lines. This poem is a sonnet. So this poem has fourteen lines.`,`Valid. No flaw to match.`],
+ [`All sonnets have fourteen lines. This poem has fourteen lines. So this poem is a sonnet.`,`Right. All A are B. This is B. So this is A. Same reversal.`],
+ [`All sonnets have fourteen lines. This poem does not have fourteen lines. So this poem is not a sonnet.`,`Valid contrapositive.`],
+ [`Most sonnets rhyme. This poem is a sonnet. So this poem probably rhymes.`,`Reasonable, and about "most".`],
+ [`No sonnets have fifteen lines. This poem is not a sonnet. So this poem has fifteen lines.`,`Flawed, but a different flaw (negating the "if").`]]},
+{id:"r1",t:"meth",d:2,s:`Lin: Raising the bus fare will hurt low-income riders, so the city should not do it.\nOkoro: But without the fare increase the city will have to cut routes, and route cuts would hurt low-income riders even more.`,q:`Okoro responds to Lin's argument by`,a:0,c:[
+ [`pointing out that the alternative to the proposal would produce more of the very harm Lin is worried about`,`Right. Okoro accepts Lin's concern and shows that rejecting the fare increase makes it worse.`],
+ [`denying that a fare increase would hurt low-income riders`,`Okoro says "even more", which concedes the harm.`],
+ [`questioning whether Lin sincerely cares about low-income riders`,`No personal attack.`],
+ [`offering evidence that most riders support a fare increase`,`No such evidence appears.`],
+ [`showing that Lin's argument uses a key term in two different senses`,`No shift in meaning is alleged.`]]},
+{id:"r2",t:"meth",d:3,s:`Urban trees lower summer temperatures, and cooler streets mean fewer heat-related hospital visits. Since those visits are expensive for the city, planting trees can pay for itself. The city should therefore expand its tree-planting program.`,q:`The claim that planting trees can pay for itself plays which one of the following roles in the argument?`,a:2,c:[
+ [`It is the main conclusion of the argument.`,`The main conclusion is that the city should expand the program.`],
+ [`It is a premise for which no support is offered.`,`Support is offered: trees cool streets, cooler streets cut costly visits.`],
+ [`It is a conclusion drawn from other claims and is used in turn to support the main conclusion.`,`Right. An intermediate conclusion: supported from above, supporting below.`],
+ [`It is an objection that the argument goes on to answer.`,`It helps the argument. It isn't an objection.`],
+ [`It is an illustration of a general principle stated elsewhere in the argument.`,`No general principle is stated.`]]},
+{id:"pr1",t:"prin",d:2,s:`Principle: One should not criticize another person's work publicly unless one has first given that person a chance to correct it privately.`,q:`Which one of the following actions most clearly violates the principle above?`,a:4,c:[
+ [`Mara tells her colleague privately about errors in his report, and when he declines to fix them she raises them at a staff meeting.`,`She gave him the private chance first. No violation.`],
+ [`Mara praises her colleague's report at a staff meeting without having read all of it.`,`Praise isn't criticism.`],
+ [`Mara tells her colleague privately about errors in his report and never mentions them to anyone else.`,`No public criticism at all.`],
+ [`Mara declines to comment when asked at a meeting about her colleague's report.`,`No criticism.`],
+ [`Mara posts a review listing errors in her colleague's report without ever having mentioned them to him.`,`Right. Public criticism with no private chance to correct.`]]},
+{id:"pr2",t:"prin",d:3,s:`An agency fined Burke Co. for dumping toxic waste, even though Burke did not know the waste was toxic. The fine was fair, since Burke could easily have tested the waste before dumping it.`,q:`Which one of the following principles, if valid, most helps to justify the reasoning above?`,a:1,c:[
+ [`A party should be penalized for harm it caused only if it knew its action was harmful.`,`This would make the fine unfair. Burke didn't know.`],
+ [`A party may fairly be penalized for harm it caused if it could easily have discovered that its action was harmful.`,`Right. Burke could easily have found out, so the fine is fair. The rule's "if" is met and its "then" matches.`],
+ [`A party that knowingly causes harm should be penalized more heavily than one that does not.`,`Compares penalties. Doesn't show this fine was fair.`],
+ [`Agencies should test waste themselves before issuing fines.`,`About the agency's duties, not Burke's fine.`],
+ [`A party cannot fairly be penalized unless it could easily have discovered that its action was harmful.`,`Says when a penalty is unfair. It never says a penalty is fair, so it can't justify the fine.`]]},
+{id:"a1",t:"rc",p:"A",d:2,q:`Which one of the following most accurately states the main point of the passage?`,a:2,c:[
+ [`Textualism is the better method because it leaves the repair of flawed statutes to legislatures.`,`The author never picks a side.`],
+ [`Purposivism allows judges to replace the legislature's policy choices with their own.`,`This is the textualists' complaint, reported in paragraph one.`],
+ [`The conflict between textualism and purposivism is narrower than usually portrayed and rests on a judgment about institutions rather than about language.`,`Right. Paragraph two shrinks the conflict; paragraph three says what it really turns on.`],
+ [`Judges of both schools reach identical results in every case.`,`"Great majority", not every case.`],
+ [`Legislatures are slow to correct poorly drafted statutes.`,`The author says this is an open question that matters, not a fact.`]]},
+{id:"a2",t:"rc",p:"A",d:1,q:`The author's attitude toward the usual picture of the two methods as rivals is best described as`,a:0,c:[
+ [`considering it exaggerated`,`Right. "This picture of rivalry is overdrawn."`],
+ [`full endorsement`,`The author pushes back on it.`],
+ [`indifference`,`The whole passage is about correcting it.`],
+ [`treating it as deliberately dishonest`,`Overdrawn, not dishonest. Too extreme.`],
+ [`regarding it as too recent to evaluate`,`Nothing about how recent it is.`]]},
+{id:"a3",t:"rc",p:"A",d:2,q:`According to the passage, the two methods lead to different results in cases where`,a:3,c:[
+ [`the statute's language is unclear and its purpose is unknown`,`The passage says the language is clear in these cases.`],
+ [`legislators had differing motives for supporting the statute`,`Mentioned in paragraph three for a different point.`],
+ [`judges hold strong policy preferences of their own`,`Part of the textualist complaint, not the stated dividing line.`],
+ [`the language is clear but applying it seems to defeat the statute's aim`,`Right. Stated directly in paragraph two.`],
+ [`the legislature has already corrected a drafting error`,`Then there would be nothing to disagree about.`]]},
+{id:"a4",t:"rc",p:"A",d:3,q:`The author would be most likely to agree with which one of the following?`,a:4,c:[
+ [`A careful study of how words were used when a statute was enacted would settle the debate.`,`The author says evidence about language can't settle it.`],
+ [`Purposivist judges make more errors than textualist judges.`,`The author says each risks a different kind of error and doesn't count them.`],
+ [`Most statutes are badly drafted.`,`In most cases text and purpose agree.`],
+ [`Judges cannot identify a statute's purpose.`,`The author asks how reliably they can. That's a question, not a denial.`],
+ [`Knowing how often legislatures actually fix flawed statutes would be relevant to choosing between the methods.`,`Right. Paragraph three says the debate turns on exactly this.`]]},
+{id:"b1",t:"rc",p:"B",d:2,q:`The primary purpose of the passage is to`,a:1,c:[
+ [`argue that oral testimony is more accurate than written documents`,`The author concedes oral accounts are often inaccurate about dates.`],
+ [`describe a change in how historians value oral testimony and explain how its errors can themselves be informative`,`Right. Old view, then the challenge, then what the challenge asks of historians.`],
+ [`show that written documents are too biased to be used`,`Document bias is mentioned and set aside as the less interesting point.`],
+ [`recount the history of a particular factory killing`,`That's one example.`],
+ [`defend earlier historians against their later critics`,`The passage sides with the later approach.`]]},
+{id:"b2",t:"rc",p:"B",d:2,q:`The author mentions the misdated factory killing primarily in order to`,a:0,c:[
+ [`illustrate how a shared error can reveal the way a community has come to understand an event`,`Right. "The error is not noise. It shows how a community has come to understand the event."`],
+ [`prove that witnesses deliberately mislead interviewers`,`Nothing suggests the error is deliberate.`],
+ [`show that the written record of the killing was wrong`,`The written date isn't challenged.`],
+ [`argue that famous protests are remembered more accurately`,`The passage doesn't say that.`],
+ [`explain why earlier historians distrusted memory`,`Their reasons are in paragraph one. This example serves the later view.`]]},
+{id:"b3",t:"rc",p:"B",d:2,q:`The historians described in the first paragraph would most likely agree that`,a:3,c:[
+ [`oral accounts should never be collected`,`They allowed them as a supplement.`],
+ [`documents are written only by the powerful`,`That's the later historians' point about documents.`],
+ [`errors in testimony show what events came to mean`,`This is the later view.`],
+ [`where a document and an oral account conflict, the document should be preferred`,`Right. Oral accounts were "discarded wherever the two conflicted."`],
+ [`memory grows more reliable with time`,`They held the opposite.`]]},
+{id:"b4",t:"rc",p:"B",d:3,q:`Which one of the following claims would the author be most likely to reject?`,a:4,c:[
+ [`Written documents reflect the aims of those who produced them.`,`The author says this outright.`],
+ [`Witnesses sometimes report what they were told rather than what they saw.`,`The author never disputes this.`],
+ [`Historians need not believe everything they are told in interviews.`,`Stated in the last paragraph.`],
+ [`Oral testimony is often wrong about the order of events.`,`Conceded in paragraph two.`],
+ [`An oral account that gets its dates wrong has nothing to offer a historian.`,`Right. The passage's whole point is that such an account can be the best evidence of what events came to mean.`]]},
+{id:"f5",t:"flaw",d:2,s:`Each player in the Calloway Orchestra is among the finest musicians in the country. So the Calloway Orchestra must be among the finest orchestras in the country.`,q:`The argument is flawed because it`,a:3,c:[
+ [`relies on the opinion of critics who may be biased`,`No critics are cited.`],
+ [`assumes that the finest musicians always choose to join orchestras`,`The argument is about players already in this orchestra.`],
+ [`confuses what is required to be a fine orchestra with what is enough`,`Tempting wording, but no condition is stated and reversed.`],
+ [`assumes that a group must have a quality simply because each of its members has that quality`,`Right. Great soloists can play badly together. What's true of the parts needn't be true of the whole.`],
+ [`draws a conclusion about the present from evidence about the past`,`All the evidence is present tense.`]]},
+{id:"f6",t:"flaw",d:3,s:`In a survey of people leaving the Greenway Fitness Center, 90 percent said they exercise at least three times a week. So most residents of the city exercise at least three times a week.`,q:`The reasoning above is most vulnerable to criticism on the grounds that it`,a:0,c:[
+ [`generalizes from a group that is likely to differ from the population as a whole in the very respect at issue`,`Right. People leaving a gym are exactly the people you'd expect to exercise. They don't stand in for the whole city.`],
+ [`treats a claim about most residents as if it were a claim about all residents`,`The conclusion says "most" and stays there.`],
+ [`fails to say how many people were surveyed`,`Even a huge survey taken at a gym door would have the same problem.`],
+ [`assumes that exercising three times a week is enough to stay healthy`,`Health isn't part of the conclusion.`],
+ [`takes for granted that people exercise only at fitness centers`,`The argument doesn't need this.`]]},
+{id:"n4",t:"na",d:2,s:`The city plans to reduce traffic congestion by building a light-rail line between the suburbs and downtown. Since the line will connect the two areas where most commuters live and work, congestion will fall once it opens.`,q:`The argument relies on which one of the following assumptions?`,a:2,c:[
+ [`The light-rail line will be cheaper to build than a new highway.`,`Cost has nothing to do with whether congestion falls.`],
+ [`Every commuter who now drives will switch to light rail.`,`Far more than the argument needs.`],
+ [`At least some people who now drive between the suburbs and downtown will ride the light rail instead.`,`Right. Negate it: no driver switches. Then the same cars are on the road and congestion doesn't fall.`],
+ [`Congestion in the city is worse than in other cities of similar size.`,`No comparison to other cities is needed.`],
+ [`The light-rail line will run more often than the buses it replaces.`,`Buses are never mentioned.`]]},
+{id:"n5",t:"na",d:3,s:`The handwriting in a newly discovered letter matches known samples of the poet Ilse Varga's handwriting. Therefore, Varga wrote the letter.`,q:`Which one of the following is an assumption required by the argument?`,a:1,c:[
+ [`Varga wrote more letters than any other poet of her time.`,`How many letters she wrote is irrelevant.`],
+ [`The letter was not written by someone skilled at imitating Varga's handwriting.`,`Right. If a skilled imitator wrote it, the match proves nothing. The argument must exclude that.`],
+ [`The letter discusses subjects that appear in Varga's poems.`,`Would help, but the argument rests on handwriting alone.`],
+ [`All of Varga's known letters have been authenticated by experts.`,`Stronger than needed and about other letters.`],
+ [`No two people have ever had similar handwriting.`,`Too sweeping. The argument only needs this letter not to be someone else's.`]]},
+{id:"s3",t:"sa",d:2,s:`Every member of the planning committee voted for the proposal. Therefore, at least one architect voted for the proposal.`,q:`The conclusion follows logically if which one of the following is assumed?`,a:0,c:[
+ [`At least one member of the planning committee is an architect.`,`Right. That architect is a member, and every member voted for it.`],
+ [`Some architects are not members of the planning committee.`,`Tells you about architects off the committee, who may not have voted at all.`],
+ [`The proposal concerned the design of a public building.`,`The topic doesn't tell you who voted.`],
+ [`No member of the planning committee is an engineer.`,`Not being an engineer doesn't make anyone an architect.`],
+ [`The planning committee has more members than any other committee.`,`Size doesn't put an architect on it.`]]},
+{id:"s4",t:"sa",d:3,s:`Only projects that have received a safety certificate may open to the public. The Harbor Bridge has not passed its load test. Therefore, the Harbor Bridge may not open to the public.`,q:`Which one of the following, if assumed, enables the conclusion to be properly drawn?`,a:3,c:[
+ [`Any project that has passed its load test receives a safety certificate.`,`Backwards. The bridge failed to pass, and this rule only speaks about projects that passed.`],
+ [`Some projects that have not passed a load test have received safety certificates.`,`This would leave the bridge a way to get certified.`],
+ [`The Harbor Bridge is scheduled to be tested again next month.`,`Doesn't connect the load test to the certificate.`],
+ [`No project receives a safety certificate unless it has passed its load test.`,`Right. No load test, so no certificate. No certificate, so it may not open.`],
+ [`Every project now open to the public has a safety certificate.`,`Restates the first premise. The gap is still open.`]]},
+{id:"st3",t:"str",d:2,s:`In a study, flu patients who took the drug zelmavir recovered two days sooner on average than flu patients who did not take it. The researchers conclude that zelmavir shortens the flu.`,q:`Which one of the following, if true, most strengthens the researchers' conclusion?`,a:4,c:[
+ [`The patients who took zelmavir were on average younger and healthier than those who did not.`,`Weakens. Youth and health could explain the faster recovery.`],
+ [`Zelmavir is less expensive than other flu drugs.`,`Price is irrelevant.`],
+ [`The severity of the flu varies from year to year.`,`Both groups were in the same study.`],
+ [`Some patients who took zelmavir reported headaches.`,`Side effects don't bear on recovery time.`],
+ [`Which patients received zelmavir was decided at random.`,`Right. Random assignment makes it unlikely the two groups differed in any way except the drug.`]]},
+{id:"st4",t:"str",d:3,s:`The fish population of Lake Marren fell sharply in the two years after a factory opened upstream. Environmentalists conclude that the factory's discharge is killing the fish.`,q:`Which one of the following, if true, provides the most support for the environmentalists' conclusion?`,a:1,c:[
+ [`Commercial fishing on Lake Marren increased sharply during the same two years.`,`Weakens. Overfishing is a rival cause.`],
+ [`Dead fish from the lake contain high levels of a chemical that is found in the factory's discharge and is known to be lethal to fish.`,`Right. This links the factory's discharge directly to the deaths.`],
+ [`The factory employs a large share of the nearby town's workers.`,`Irrelevant.`],
+ [`Fish populations also fell in several lakes in the region that have no factories nearby.`,`Weakens. Something regional may be responsible.`],
+ [`Lake Marren is deeper than most lakes in the region.`,`No link to the fish decline.`]]},
+{id:"w4",t:"weak",d:2,s:`In the year after Dunmore School began requiring uniforms, the number of disciplinary incidents recorded at the school fell by a third. The principal concludes that uniforms improve student behavior.`,q:`Which one of the following, if true, most seriously weakens the principal's conclusion?`,a:2,c:[
+ [`Most parents at Dunmore supported the uniform requirement.`,`Support doesn't affect whether uniforms changed behavior.`],
+ [`Uniforms cost families less than the clothes students wore before.`,`Cost is irrelevant.`],
+ [`In that same year the school stopped recording minor incidents such as lateness.`,`Right. Fewer recorded incidents may just reflect a change in what gets written down.`],
+ [`A nearby school without uniforms saw no change in disciplinary incidents.`,`Strengthens by ruling out an area-wide drop.`],
+ [`Some students at Dunmore dislike wearing uniforms.`,`Disliking uniforms doesn't mean behavior didn't improve.`]]},
+{id:"w5",t:"weak",d:3,s:`To reduce litter in Hollis Park, the city will double the number of trash cans there. Since people litter mainly when no trash can is nearby, the amount of litter in the park will fall.`,q:`Which one of the following, if true, most calls into question the prediction above?`,a:0,c:[
+ [`The parks department cannot empty any more cans per week than it does now, and overflowing cans are a major source of litter in the park.`,`Right. Twice as many cans emptied half as often means more overflow, so litter may not fall.`],
+ [`Hollis Park has more visitors on weekends than on weekdays.`,`Doesn't touch the plan.`],
+ [`Other cities have reduced litter by imposing fines.`,`Another method working elsewhere doesn't mean this one fails.`],
+ [`The new trash cans will be the same size as the existing ones.`,`Same size is what you'd assume. No problem for the plan.`],
+ [`Some visitors carry their trash home with them.`,`Those visitors aren't the source of litter.`]]},
+{id:"m4",t:"mbt",d:2,s:`No certified organic farm in the valley uses synthetic pesticides. Some farms in the valley that grow apples are certified organic.`,q:`If the statements above are true, which one of the following must also be true?`,a:3,c:[
+ [`Every farm in the valley that grows apples is certified organic.`,`You were told "some".`],
+ [`No farm in the valley that grows apples uses synthetic pesticides.`,`Only the organic ones are covered.`],
+ [`Some farms in the valley that use synthetic pesticides grow apples.`,`Possible, not proven.`],
+ [`Some farms in the valley that grow apples do not use synthetic pesticides.`,`Right. The organic apple farms exist, and no organic farm uses them.`],
+ [`Most certified organic farms in the valley grow apples.`,`"Some" never gets you to "most".`]]},
+{id:"m5",t:"mbt",d:3,s:`Cora will not finish her film this year unless she gets the grant. If she finishes the film this year, it will be shown at the festival. Cora's film will not be shown at the festival.`,q:`Which one of the following follows logically from the statements above?`,a:1,c:[
+ [`Cora did not get the grant.`,`The trap. The grant is required for finishing, but she could get it and still not finish.`],
+ [`Cora will not finish her film this year.`,`Right. Finish means shown. Not shown, so not finished.`],
+ [`If Cora gets the grant, she will finish her film this year.`,`Reversal. The grant is necessary, not enough.`],
+ [`The festival shows only films that were finished this year.`,`Nothing about the festival's other rules.`],
+ [`Cora will finish her film next year.`,`Next year is never discussed.`]]},
+{id:"mc3",t:"mc",d:2,s:`Many gardeners water their lawns every evening. This is counterproductive. Water that sits on grass overnight encourages fungus, and frequent shallow watering keeps roots near the surface, where they dry out quickly. A lawn watered deeply once a week in the morning is far more resilient.`,q:`Which one of the following most accurately expresses the conclusion of the argument?`,a:2,c:[
+ [`Many gardeners water their lawns every evening.`,`Background. It sets up the claim.`],
+ [`Water that sits on grass overnight encourages fungus.`,`A reason offered in support.`],
+ [`Watering a lawn every evening works against the gardener's own goals.`,`Right. "This is counterproductive" is what the rest supports.`],
+ [`Frequent shallow watering keeps roots near the surface.`,`A reason offered in support.`],
+ [`Gardeners should stop growing lawns that need frequent watering.`,`Never said.`]]},
+{id:"mc4",t:"mc",d:3,s:`Supporters say the new stadium will pay for itself through tourism. They are wrong. Stadiums are in use only a few dozen days a year, so they draw few visitors who stay overnight, and without overnight visitors, tourism revenue is small.`,q:`The main conclusion of the argument is that`,a:0,c:[
+ [`the new stadium will not pay for itself through tourism`,`Right. "They are wrong" denies the supporters' claim, and everything after it is support.`],
+ [`stadiums draw few visitors who stay overnight`,`An intermediate conclusion. It follows from "a few dozen days" and supports the main point.`],
+ [`stadiums are in use only a few dozen days a year`,`A premise.`],
+ [`the new stadium should not be built`,`Goes further than the author does.`],
+ [`tourism revenue depends on overnight visitors`,`A premise.`]]},
+{id:"p3",t:"para",d:2,s:`Doctors widely regard the surgeons at Mercy Hospital as the most skilled in the region. Yet Mercy's surgical patients die at a higher rate than surgical patients at any other hospital in the region.`,q:`Which one of the following, if true, most helps to resolve the apparent conflict?`,a:4,c:[
+ [`Mercy Hospital performs more surgeries each year than any other hospital in the region.`,`A rate already accounts for volume.`],
+ [`Mercy Hospital's surgeons are paid more than surgeons elsewhere in the region.`,`Pay doesn't explain deaths.`],
+ [`Some surgeons at other hospitals trained at Mercy.`,`Doesn't address either fact.`],
+ [`Mercy Hospital's equipment is the newest in the region.`,`Makes the high death rate more puzzling.`],
+ [`Because of their skill, Mercy's surgeons are sent the region's most severe and dangerous cases.`,`Right. The best surgeons get the hardest cases, so more of their patients die despite their skill.`]]},
+{id:"p4",t:"para",d:3,s:`A town banned the thin plastic bags that grocery stores had been giving away. In the following year, the total weight of plastic the town sent to its landfill increased.`,q:`Which one of the following, if true, most helps to explain the increase?`,a:1,c:[
+ [`Most shoppers in the town supported the ban.`,`Support doesn't explain more plastic.`],
+ [`Many residents had reused the thin bags to line their trash bins and, after the ban, bought thicker plastic trash bags instead.`,`Right. Thin bags were replaced by heavier ones, so plastic by weight went up.`],
+ [`Grocery stores in the town began selling paper bags.`,`Paper bags wouldn't add to plastic.`],
+ [`A neighboring town passed a similar ban the same year.`,`Doesn't explain this town's landfill.`],
+ [`The thin bags had made up only a small share of the town's plastic waste.`,`Explains a small decrease at most, not an increase.`]]},
+{id:"pa3",t:"par",d:2,s:`Every employee who works weekends receives extra pay. Jun works weekends. So Jun receives extra pay.`,q:`Which one of the following is most similar in its reasoning to the argument above?`,a:2,c:[
+ [`Every book on the top shelf is a first edition. This atlas is a first edition. So this atlas is on the top shelf.`,`Reverses the rule. Invalid.`],
+ [`Every book on the top shelf is a first edition. This atlas is not on the top shelf. So this atlas is not a first edition.`,`Negates the rule. Invalid.`],
+ [`Every book on the top shelf is a first edition. This atlas is on the top shelf. So this atlas is a first edition.`,`Right. All A are B. This is A. So this is B.`],
+ [`Most books on the top shelf are first editions. This atlas is on the top shelf. So this atlas is a first edition.`,`"Most" can't guarantee the conclusion.`],
+ [`Some books on the top shelf are first editions. Some first editions are valuable. So some books on the top shelf are valuable.`,`Different form, and invalid.`]]},
+{id:"pa4",t:"par",d:3,s:`If the alarm is set, the panel light is red. The alarm is not set. So the panel light is not red.`,q:`Which one of the following exhibits flawed reasoning most similar to that in the argument above?`,a:4,c:[
+ [`If the oven is on, the kitchen is warm. The kitchen is not warm. So the oven is not on.`,`Valid contrapositive. No flaw.`],
+ [`If the oven is on, the kitchen is warm. The kitchen is warm. So the oven is on.`,`Flawed, but it affirms the "then" part. The original denies the "if" part.`],
+ [`If the oven is on, the kitchen is warm. The oven is on. So the kitchen is warm.`,`Valid.`],
+ [`The oven is usually on in the evening. It is evening. So the oven is probably on.`,`Probability reasoning. Different form.`],
+ [`If the oven is on, the kitchen is warm. The oven is not on. So the kitchen is not warm.`,`Right. If A then B. Not A. So not B. Something else could warm the kitchen.`]]},
+{id:"r3",t:"meth",d:2,s:`Dev: This restaurant must be good. It is always full.\nAsha: By that reasoning, the motor-vehicle office is the best place in town.`,q:`Asha responds to Dev by`,a:3,c:[
+ [`offering evidence that the restaurant is not always full`,`Asha doesn't dispute the fact.`],
+ [`pointing out that Dev has a personal stake in the restaurant`,`No motive is mentioned.`],
+ [`defining "good" differently than Dev does`,`No definition is offered.`],
+ [`applying Dev's reasoning to a similar case in which it leads to an absurd conclusion`,`Right. Crowded doesn't mean good, and the motor-vehicle office shows it.`],
+ [`citing an authority who disagrees with Dev`,`No authority appears.`]]},
+{id:"r4",t:"meth",d:3,s:`Some economists claim that raising the minimum wage always reduces employment. But several regions that recently raised their minimum wage saw employment hold steady. So the economists' claim is too sweeping.`,q:`The statement that several regions saw employment hold steady functions in the argument as`,a:0,c:[
+ [`a counterexample used to challenge a general claim`,`Right. "Always" is defeated by cases where it didn't happen.`],
+ [`the main conclusion of the argument`,`The conclusion is that the claim is too sweeping.`],
+ [`a claim the argument sets out to refute`,`The argument relies on it.`],
+ [`an assumption that is left unstated`,`It is stated outright.`],
+ [`a general principle from which the conclusion is derived`,`It's a specific observation, not a principle.`]]},
+{id:"pr3",t:"prin",d:2,s:`Principle: A journalist may publish private information about a public official only if the information bears on the official's ability to perform public duties.`,q:`Which one of the following judgments most closely conforms to the principle above?`,a:1,c:[
+ [`It was acceptable to publish the mayor's medical records, since his illness affects his ability to do his job.`,`The trap. "Only if" sets a requirement. Meeting it doesn't prove publishing was acceptable.`],
+ [`It was wrong to publish details of the senator's divorce, since they have no bearing on her ability to do her job.`,`Right. The requirement isn't met, so the journalist may not publish.`],
+ [`It was wrong to publish a private citizen's address.`,`The rule covers public officials only.`],
+ [`It was acceptable to publish the governor's voting record.`,`A voting record isn't private information.`],
+ [`It was wrong to publish the judge's finances, since the story contained errors.`,`Accuracy isn't what the principle is about.`]]},
+{id:"pr4",t:"prin",d:3,s:`Tamsin promised to help Leo move on Saturday. On Saturday her neighbor urgently needed a ride to the hospital, so Tamsin drove the neighbor and did not help Leo. Tamsin did nothing wrong.`,q:`Which one of the following principles, if valid, most helps to justify the judgment above?`,a:2,c:[
+ [`One should break a promise only if someone is in urgent need.`,`"Only if" tells you when breaking a promise is wrong. It never says it's permitted.`],
+ [`Promises made to friends matter more than promises made to strangers.`,`Would point toward helping Leo.`],
+ [`It is permissible to break a promise if keeping it would prevent one from helping someone in urgent need.`,`Right. Her case meets the "if", and the result is exactly "did nothing wrong".`],
+ [`One should never make a promise that one might have to break.`,`This would suggest Tamsin erred.`],
+ [`Anyone who breaks a promise owes an apology.`,`About what comes after. Doesn't justify the judgment.`]]},
+{id:"c1",t:"rc",p:"C",d:2,q:`Which one of the following best expresses the main point of the passage?`,a:3,c:[
+ [`Most striking findings in psychology are false.`,`The author never says this.`],
+ [`Failed replications are usually the fault of the second team.`,`The author says they can be, not that they usually are.`],
+ [`Original findings deserve the benefit of the doubt.`,`"None of this is a defense of the original findings."`],
+ [`One failed replication does not show a finding is false, and only systematic, jointly designed replications can show whether and how widely an effect holds.`,`Right. Paragraph two gives the caution; paragraph three gives the remedy.`],
+ [`Researchers often analyze data until something publishable emerges.`,`One possible explanation listed in paragraph one.`]]},
+{id:"c2",t:"rc",p:"C",d:2,q:`According to the passage, a replication might fail even though the original claim is true because`,a:0,c:[
+ [`the second team left out a procedural detail the original authors did not report`,`Right. Stated in paragraph two.`],
+ [`the original sample was too small`,`That's a reason the original might be false.`],
+ [`skeptics design replications in order to make them fail`,`The passage never accuses anyone of this.`],
+ [`journals prefer to publish striking results`,`Not stated.`],
+ [`the original researchers analyzed their data too many times`,`A reason the original might be false.`]]},
+{id:"c3",t:"rc",p:"C",d:3,q:`The first sentence of the third paragraph serves primarily to`,a:4,c:[
+ [`introduce a new example of a failed replication`,`No example follows.`],
+ [`summarize the view described in the first paragraph`,`It looks back at paragraph two, not one.`],
+ [`concede that the author's argument in the second paragraph was mistaken`,`The author keeps that argument and adds to it.`],
+ [`show that original findings are usually correct`,`It says the opposite of defending them.`],
+ [`head off the impression that the author is taking the side of the original findings`,`Right. After a paragraph that helps the originals, the author makes clear the point cuts both ways.`]]},
+{id:"c4",t:"rc",p:"C",d:3,q:`The author would most likely agree with which one of the following statements?`,a:1,c:[
+ [`A finding that fails to replicate once should be discarded.`,`"Neither to discard the finding nor to shield it."`],
+ [`An effect that disappears when the procedure changes slightly is narrower than a broad claim about it would suggest.`,`Right. Paragraph three: such an effect is "at best fragile and far narrower" than the sweeping claim.`],
+ [`Replications should be designed only by researchers who doubt the original finding.`,`The author wants proponents and skeptics together.`],
+ [`Small samples are the main cause of failed replications.`,`Listed as one possibility, never ranked.`],
+ [`Replication attempts add little to scientific knowledge.`,`The author thinks a series of them is the only way to know.`]]},
+{"id":"t1","t":"term","d":1,"q":"In the statement above, being at least thirty years old is","a":1,"c":[["a sufficient condition for being a senator","Being thirty doesn't make anyone a senator."],["a necessary condition for being a senator","Right. It's required. You can't be a senator without it."],["the contrapositive of being a senator","A contrapositive is a whole statement, not one condition."],["an assumption of the statement","It's stated, so it isn't an assumption."],["the conclusion of an argument","There's no argument here, only a rule."]],"s":"If you are a senator, then you are at least thirty years old."},
+{"id":"t2","t":"term","d":1,"q":"Which one of the following is the contrapositive of the statement above?","a":3,"c":[["If an animal has feathers, then it is a bird.","Mistaken reversal. Flipped, not negated."],["If an animal is not a bird, then it does not have feathers.","Mistaken negation. Negated, not flipped."],["Some animals with feathers are birds.","True enough, but not the contrapositive."],["If an animal does not have feathers, then it is not a bird.","Right. Flipped and negated."],["Only birds have feathers.","This is the reversal in disguise."]],"s":"If an animal is a bird, then it has feathers."},
+{"id":"t3","t":"term","d":1,"q":"On the LSAT, the word \"most\" means","a":2,"c":[["more than a few","Too vague."],["exactly half","Half is not most."],["more than half, and possibly all","Right. A majority, with no upper limit."],["nearly all","Fifty-one percent is most."],["more than half, but not all","The trap. Most doesn't rule out all."]]},
+{"id":"t4","t":"term","d":1,"q":"On the LSAT, the word \"some\" means","a":0,"c":[["at least one, and possibly all","Right. A floor with no ceiling."],["a few, but fewer than half","Everyday meaning, not the test's."],["more than one","One is enough."],["at least one, but not all","Some doesn't rule out all."],["a minority","Could be a majority."]]},
+{"id":"t5","t":"term","d":1,"q":"A premise is best described as","a":4,"c":[["the main point the author wants to prove","That's the conclusion."],["a claim the argument needs but never states","That's an assumption."],["a claim the author argues against","That's an opposing view."],["a rule that links two conditions","That's a conditional statement."],["a claim offered as support for another claim","Right. Premises are the reasons."]]},
+{"id":"t6","t":"term","d":2,"q":"Which one of the following words most often introduces a premise?","a":1,"c":[["therefore","Conclusion indicator."],["since","Right. 'Since', 'because', 'for' and 'given that' introduce support."],["thus","Conclusion indicator."],["hence","Conclusion indicator."],["consequently","Conclusion indicator."]]},
+{"id":"t7","t":"term","d":2,"q":"Which one of the following phrases most often introduces a conclusion?","a":3,"c":[["because","Premise indicator."],["given that","Premise indicator."],["after all","Usually introduces a reason."],["it follows that","Right. So do 'therefore', 'thus', 'hence' and 'so'."],["for example","Introduces an illustration."]]},
+{"id":"t8","t":"term","d":2,"q":"An assumption in an argument is","a":0,"c":[["an unstated claim that the argument depends on","Right. It fills the gap between premises and conclusion."],["a premise the author states at the beginning","Stated claims aren't assumptions."],["a claim the author proves","An assumption is taken for granted, not proven."],["the author's main point","That's the conclusion."],["any claim that might be false","Being doubtful doesn't make something an assumption."]]},
+{"id":"t9","t":"term","d":2,"q":"The argument above is an example of","a":2,"c":[["an ad hominem attack","Nobody is attacked."],["a false dilemma","No either-or choice is offered."],["circular reasoning","Right. The premise is the conclusion in different words."],["a sampling flaw","No sample."],["equivocation","'Just' keeps the same meaning."]],"s":"This law is unjust, because it is a law that treats people in a way that is not just."},
+{"id":"t10","t":"term","d":3,"q":"The flaw in the argument above is best described as","a":4,"c":[["circular reasoning","The premises don't restate the conclusion."],["an attack on the arguer's character","No arguer is attacked."],["a part-to-whole error","No group and member reasoning."],["a mistaken reversal","The logic would work if the word kept one meaning."],["equivocation","Right. 'Man' means humankind in the first sentence and male in the second."]],"s":"Only man is rational. No woman is a man. Therefore, no woman is rational."},
+{"id":"t11","t":"term","d":1,"q":"An ad hominem argument is one that","a":1,"c":[["appeals to the popularity of a belief","That's an appeal to popular opinion."],["attacks the person making a claim rather than the claim itself","Right."],["relies on an unqualified authority","That's an appeal to authority."],["assumes what it sets out to prove","Circular reasoning."],["mistakes a correlation for a cause","A causal flaw."]]},
+{"id":"t12","t":"term","d":2,"q":"An intermediate conclusion is a claim that","a":3,"c":[["the author mentions only to reject","That's an opposing view."],["is assumed without being stated","That's an assumption."],["appears in the middle of the passage","Position doesn't define it."],["is supported by a premise and in turn supports the main conclusion","Right. Supported and supporting."],["restates the main conclusion in other words","It's a separate step."]]},
+{"id":"t13","t":"term","d":2,"q":"Holt's response is an example of","a":0,"c":[["a straw man","Right. Holt replaces Reyes's modest proposal with an extreme one and attacks that."],["circular reasoning","Holt doesn't assume the conclusion."],["a sampling flaw","No sample."],["an appeal to authority","No authority is cited."],["a mistaken negation","No conditional reasoning."]],"s":"Reyes: We should add one bike lane downtown.\nHolt: Reyes wants to ban cars from the city. That would wreck local business."},
+{"id":"t14","t":"term","d":2,"q":"The argument above is most vulnerable to the charge that it presents","a":2,"c":[["an ad hominem attack","No one is attacked."],["an equivocation","No word shifts meaning."],["a false dilemma","Right. It ignores every other way to balance a budget."],["a part-to-whole error","No group reasoning."],["a circular argument","The premises differ from the conclusion."]],"s":"Either we cut the library's budget or the city goes bankrupt. No one wants bankruptcy, so we must cut the library's budget."},
+{"id":"t15","t":"term","d":3,"q":"A sufficient assumption differs from a necessary assumption in that a sufficient assumption","a":1,"c":[["must be true for the argument to work","That describes a necessary assumption."],["guarantees the conclusion once it is added to the premises","Right. Sufficient means enough to prove it."],["is always stated in the passage","Neither kind is stated."],["weakens the argument when it is added","It does the opposite."],["is always mildly worded","Sufficient assumptions tend to be strongly worded."]]},
+{"id":"t16","t":"term","d":1,"q":"Two things are correlated when","a":4,"c":[["one causes the other","Correlation doesn't establish cause."],["they never occur together","That's the opposite."],["one is required for the other","That's a necessary condition."],["they are both caused by a third thing","One possible explanation of a correlation, not its definition."],["they tend to occur together","Right. And that alone proves nothing about cause."]]},
+{"id":"x1","t":"cond","d":1,"q":"Which one of the following correctly translates the statement above?","a":1,"c":[["If a person is a member, then that person may vote.","Backwards. Membership is required, not enough."],["If a person may vote, then that person is a member.","Right. 'Only' points at the requirement."],["If a person is not a member, then that person may vote.","The opposite of the rule."],["If a person may not vote, then that person is not a member.","Mistaken negation. A member might still be barred for another reason."],["Members and voters are the same people.","The arrow goes one way only."]],"s":"Only members may vote."},
+{"id":"x2","t":"cond","d":2,"q":"Which one of the following correctly translates the statement above?","a":3,"c":[["If you pass the exam, then you graduate.","Passing is required. It may not be enough."],["If you do not graduate, then you did not pass the exam.","You could pass and still miss another requirement."],["If you pass the exam, then you do not graduate.","Scrambled."],["If you graduate, then you passed the exam.","Right. 'Unless' means 'if not': if you don't pass, you don't graduate. Same thing, flipped and negated."],["If you graduate, then you did not pass the exam.","Contradicts the rule."]],"s":"You cannot graduate unless you pass the exam."},
+{"id":"x3","t":"cond","d":1,"q":"Which one of the following correctly translates the statement above?","a":0,"c":[["If a contract is over $500, then it must be in writing.","Right. 'All' introduces the trigger."],["If a contract is in writing, then it is over $500.","Reversal."],["If a contract is not over $500, then it must not be in writing.","Mistaken negation."],["If a contract is over $500, then it need not be in writing.","Opposite."],["Only contracts over $500 are in writing.","Reversal dressed up with 'only'."]],"s":"All contracts over $500 must be in writing."},
+{"id":"x4","t":"cond","d":2,"q":"Which one of the following correctly translates the statement above?","a":4,"c":[["If an animal is not a reptile, then it is warm-blooded.","Mistaken negation."],["If an animal is not warm-blooded, then it is a reptile.","Reversal. Fish aren't reptiles."],["If an animal is a reptile, then it is warm-blooded.","Opposite."],["Some reptiles are warm-blooded.","Contradicts 'no'."],["If an animal is a reptile, then it is not warm-blooded.","Right. 'No A are B' means A leads to not B."]],"s":"No reptiles are warm-blooded."},
+{"id":"x5","t":"cond","d":3,"q":"Which one of the following correctly translates the statement above?","a":2,"c":[["If a person is a manager, then that person received a bonus.","Not every manager got one."],["If a person did not receive a bonus, then that person is not a manager.","Mistaken negation of the correct rule."],["If a person received a bonus, then that person is a manager.","Right. 'The only' is the exception: what follows it is the trigger."],["If a person is a manager, then that person did not receive a bonus.","Opposite."],["All managers received bonuses.","Same error as the first choice."]],"s":"The only people who received bonuses were managers."},
+{"id":"x6","t":"cond","d":3,"q":"Which one of the following is the contrapositive of the statement above?","a":1,"c":[["If the shop does not reopen, then the roof was not repaired and the permit was not approved.","'And' must become 'or'. One failure is enough."],["If the shop does not reopen, then either the roof was not repaired or the permit was not approved.","Right. Flip, negate, and turn 'and' into 'or'."],["If the shop reopens, then the roof was repaired and the permit was approved.","Reversal."],["If the roof is not repaired or the permit is not approved, then the shop will not reopen.","Mistaken negation."],["If the roof is repaired, then the shop will reopen.","Drops half the trigger."]],"s":"If the roof is repaired and the permit is approved, then the shop will reopen."},
+{"id":"x7","t":"cond","d":2,"q":"Which one of the following correctly translates the statement above?","a":0,"c":[["If you may build, then you have a permit.","Right. 'Without' means 'if not': no permit, no building. Flip and negate to get this."],["If you have a permit, then you may build.","A permit is required, not enough."],["If you may not build, then you have no permit.","Reversal of the 'if not' form."],["If you have a permit, then you may not build.","Scrambled."],["Permits and building always go together.","The arrow goes one way."]],"s":"Without a permit, you may not build."},
+{"id":"x8","t":"cond","d":2,"q":"Which one of the following correctly translates the statement above?","a":3,"c":[["If the plants thrive, then they got full sun.","Reversal. They might thrive in shade too."],["If the plants do not get full sun, then they do not thrive.","Mistaken negation."],["The plants thrive only if they get full sun.","'Only if' makes sun a requirement. The sentence makes it a guarantee."],["If the plants get full sun, then they thrive.","Right. 'Whenever' introduces the trigger."],["If the plants thrive, then they did not get full sun.","Nonsense under the rule."]],"s":"These plants thrive whenever they get full sun."}
+];
+const QI={};Q.forEach(q=>QI[q.id]=q);
+const RANKS=[[0,"Pre-Law"],[60,"1L"],[150,"2L"],[280,"Law Review"],[450,"Associate"],[650,"Litigator"],[900,"Partner"],[1200,"Justice"]];
+const GOAL=10,KEY="lsat-gauntlet-v1",L="ABCDE";
+const QUESTS=["Drill here untimed on five days","Empty your Rematch queue","One official timed 35-minute Logical Reasoning section","One official Reading Comprehension section, reviewed passage by passage","For every official question you missed, write one sentence on why the right answer is right"];
+
+let S={xp:0,streak:0,best:0,hist:{},miss:[],day:{d:"",n:0},ds:{last:"",n:0},test:"",predict:true,quests:{w:"",done:[]},known:[],why:{},reg:{},time:"",t:0};
+let mem={i:0,flip:false};
+let ses=null,ref=null,pushing=false,dirty=false,timer=null,syncMsg="Saved on this device";
+const $=s=>document.querySelector(s);
+const iso=d=>{const z=new Date(d.getTime()-d.getTimezoneOffset()*6e4);return z.toISOString().slice(0,10)};
+const today=()=>iso(new Date());
+const weekKey=()=>{const d=new Date();d.setDate(d.getDate()-((d.getDay()+6)%7));return iso(d)};
+function load(){try{const r=JSON.parse(localStorage.getItem(KEY));if(r&&typeof r==="object")S=Object.assign(S,r)}catch(e){}}
+function save(){S.t=Date.now();try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}
+  if(ref){dirty=true;clearTimeout(timer);timer=setTimeout(push,1500)}}
+async function push(){if(pushing||!dirty||!ref)return;pushing=true;dirty=false;
+  try{await ref.set(JSON.parse(JSON.stringify(S)));syncMsg="Synced to your Claude account"}
+  catch(e){if(!e||e.code!=="unavailable"){ref=null;syncMsg="Saved on this device"}}
+  pushing=false;if(dirty&&ref)push()}
+async function connect(){try{
+  if(!window.claude||!window.claude.use)return;
+  const [db,user]=await Promise.all([claude.use("db"),claude.use("user")]);
+  if(!db||!user)return;const id=await user.id();if(!id)return;
+  const r=db.doc("data/users/"+id+"/progress");const snap=await r.get();ref=r;
+  const remote=snap.exists?snap.data():null;
+  if(remote&&(remote.t||0)>(S.t||0)){S=Object.assign(S,JSON.parse(JSON.stringify(remote)));try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}
+    syncMsg="Synced to your Claude account";if(!ses)render()}
+  else if(S.t&&(!remote||(remote.t||0)<S.t)){dirty=true;push()}
+  else syncMsg="Synced to your Claude account";
+  if(!ses&&route()==="progress")render();
+}catch(e){}}
+
+const rank=()=>{let i=0;RANKS.forEach((r,k)=>{if(S.xp>=r[0])i=k});return i};
+const isLR=q=>!["rc","term","cond"].includes(q.t);
+const won=id=>S.hist[id]&&S.hist[id].ok;
+const ofType=t=>Q.filter(q=>q.t===t);
+function dayCount(){return S.day.d===today()?S.day.n:0}
+function daysLeft(){if(!S.test)return null;const a=new Date(S.test+"T00:00"),b=new Date(today()+"T00:00");return Math.round((a-b)/864e5)}
+
+function hud(){const r=rank(),nx=RANKS[r+1],lo=RANKS[r][0];
+  $("#hud").innerHTML=`<div><b>${RANKS[r][1]}</b><span>Rank</span></div><div><b>${S.xp}</b><span>XP</span></div><div><b>${S.streak}</b><span>In a row</span></div><div><b>${S.ds.n||0}</b><span>Day streak</span></div>`;
+  $("#xpbar").style.width=(nx?Math.min(100,(S.xp-lo)/(nx[0]-lo)*100):100)+"%"}
+function route(){const h=location.hash.slice(1);return ["drill","playbook","memory","plan","progress"].includes(h)?h:"drill"}
+function render(){hud();const r=route();
+  document.querySelectorAll("nav a").forEach(a=>{a.getAttribute("href")==="#"+r?a.setAttribute("aria-current","page"):a.removeAttribute("aria-current")});
+  $("#app").innerHTML=r==="drill"?(ses?(ses.done?vEnd():vQ()):vHome()):r==="playbook"?vPlay():r==="memory"?vMem():r==="plan"?vPlan():vProg()}
+
+function vHome(){const dl=daysLeft(),dc=dayCount(),lr=Q.filter(isLR);
+  const types=Object.keys(TYPES).filter(t=>t!=="rc").map(t=>{const a=ofType(t),w=a.filter(q=>won(q.id)).length;
+    return `<button data-act="start" data-mode="t:${t}" class="${w===a.length?"done":""}">${TYPES[t].n}<span>${w}/${a.length}${w===a.length?" ✓":""}</span></button>`}).join("");
+  const rcs=Object.keys(P).map(k=>{const a=Q.filter(q=>q.p===k),w=a.filter(q=>won(q.id)).length;
+    return `<button data-act="start" data-mode="rc:${k}" class="${w===a.length?"done":""}">${P[k].title}<span>${w}/${a.length}${w===a.length?" ✓":""}</span></button>`}).join("");
+  return `<div class="strip">
+    <div><span class="lbl">Test day</span><b>${dl===null?"—":dl<0?"Done":dl}</b><span class="muted">${dl===null?`<a href="#plan">Set your date</a>`:dl<0?"":"days left"}</span></div>
+    <div><span class="lbl">Today</span><b>${dc}/${GOAL}</b><div class="meter"><i style="width:${Math.min(100,dc/GOAL*100)}%"></i></div></div>
+    <div><span class="lbl">Rematch queue</span><b>${S.miss.length}</b><span class="muted">${S.miss.length?"misses waiting":"all clear"}</span></div>
+  </div>${S.reg[2]&&S.test?clock():""}
+  <div class="big">
+    <button class="primary" data-act="start" data-mode="mix">Mixed round<small>Five Logical Reasoning questions. No timer.</small></button>
+    <button data-act="start" data-mode="rematch" ${S.miss.length?"":"disabled"}>Rematch<small>${S.miss.length?"Beat the questions that beat you. +5 XP each.":"Nothing to rematch. Miss something first."}</small></button>
+  </div>
+  <div class="stack"><h2>Train one skill</h2><p class="muted">Start with Terminology and If-Then Translation if the vocabulary is new. Logical Reasoning: ${lr.filter(q=>won(q.id)).length} of ${lr.length} beaten.</p><div class="modes">${types}</div></div>
+  <div class="stack"><h2>Reading Comprehension</h2><p class="muted">One passage, four questions. Read it once, slowly.</p><div class="modes">${rcs}</div></div>
+  <label class="check"><input type="checkbox" id="predict" data-act="predict" ${S.predict?"checked":""}><span><b>Predict first.</b> Hide the answer choices until you have your own answer in mind.</span></label>`}
+
+function start(mode){let list;
+  const score=q=>{const h=S.hist[q.id];return (!h?0:h.ok?2:1)+Math.random()*.9};
+  if(mode==="mix")list=Q.filter(isLR).sort((a,b)=>score(a)-score(b)).slice(0,5);
+  else if(mode==="rematch")list=S.miss.map(id=>QI[id]).filter(Boolean).slice(0,5);
+  else if(mode.startsWith("t:"))list=ofType(mode.slice(2)).sort((a,b)=>score(a)-score(b)).slice(0,5);
+  else list=Q.filter(q=>q.p===mode.slice(3));
+  if(!list.length)return;
+  ses={mode,list:list.map(q=>q.id),i:0,pick:null,locked:false,shown:!S.predict,res:[],xp:0,gain:0,done:false};render();window.scrollTo(0,0)}
+
+function vQ(){const q=QI[ses.list[ses.i]],T=TYPES[q.t],rem=ses.mode==="rematch";
+  const pips=ses.list.map((_,k)=>`<i class="${k<ses.res.length?(ses.res[k]?"y":"n"):k===ses.i?"cur":""}"></i>`).join("");
+  let h=`<div class="row" style="justify-content:space-between"><div class="pips" aria-label="Question ${ses.i+1} of ${ses.list.length}">${pips}</div><button data-act="quit">Leave round</button></div>
+  <div class="row"><span class="lbl">${T.n} · ${"★".repeat(q.d)}${"☆".repeat(3-q.d)}${rem?" · Rematch":""}</span></div>`;
+  if(q.p){const p=P[q.p];h+=`<details class="ruled" ${ses.i===0||ses.open?"open":""}><summary>Passage: ${p.title}</summary>${p.text.map(x=>`<p>${x}</p>`).join("")}</details>`}
+  else if(q.s)h+=`<div class="ruled">${q.s.split("\n").map(x=>`<p>${x}</p>`).join("")}</div>`;
+  h+=`<p class="stem">${q.q}</p>`;
+  if(!ses.shown)return h+`<div class="gate"><p><b>Predict first.</b> ${T.move}</p><button class="primary" data-act="show">I have my answer. Show the choices</button></div>`;
+  h+=`<div class="choices">`+q.c.map((c,k)=>{let cls="choice",note="";
+    if(ses.locked){cls+=k===q.a?" right":k===ses.pick?" wrong":" dim";note=`<span class="note">${k===q.a?"✓ ":k===ses.pick?"✗ ":""}${c[1]}</span>`}
+    return `<button class="${cls}" data-act="pick" data-k="${k}" aria-pressed="${!ses.locked&&ses.pick===k}" ${ses.locked?"disabled":""}><span class="L">${L[k]}</span><span>${c[0]}</span>${note}</button>`}).join("")+`</div>`;
+  if(!ses.locked)return h+`<div class="row"><button class="primary" data-act="lock" ${ses.pick===null?"disabled":""}>Lock in answer</button><span class="muted">No timer. Take as long as you need.</span></div>`;
+  const ok=ses.pick===q.a;
+  h+=`<div class="verdict ${ok?"ok":"no"}" id="verdict"><h3>${ok?"Correct":"Not this time"}</h3>
+   <p>${ok?`<span class="xp">+${ses.gain} XP</span> ${S.streak>1?`· ${S.streak} in a row`:""}`:`It's in your Rematch queue. Before you move on, read why <b>${L[q.a]}</b> is right and why <b>${L[ses.pick]}</b> is wrong, then say it back in your own words.`}</p>
+   <p class="muted"><b>${T.n} trap:</b> ${T.trap}</p>${ok?"":`<p class="lbl" style="margin-top:6px">Why did you miss it?</p><div class="row">${WHY.map((w,k)=>`<button class="chip" data-act="why" data-k="${k}" aria-pressed="${ses.why===k}">${w[0]}</button>`).join("")}</div>${ses.why!=null?`<p>${WHY[ses.why][1]}</p>`:""}`}</div>
+  <div class="row"><button class="primary" data-act="next">${ses.i+1<ses.list.length?"Next question":"Finish round"}</button></div>`;
+  return h}
+
+function lock(){const q=QI[ses.list[ses.i]],ok=ses.pick===q.a,h=S.hist[q.id]||(S.hist[q.id]={n:0,ok:false,won:false});
+  ses.locked=true;h.n++;let g=0;const t=today();
+  if(S.day.d!==t)S.day={d:t,n:0};S.day.n++;
+  if(S.ds.last!==t){const y=new Date();y.setDate(y.getDate()-1);S.ds={last:t,n:S.ds.last===iso(y)?(S.ds.n||0)+1:1}}
+  if(ok){g=h.won?3:10*q.d;const mi=S.miss.indexOf(q.id);if(mi>-1){S.miss.splice(mi,1);g+=5}
+    S.streak++;if(S.streak%3===0)g+=5;if(S.streak>S.best)S.best=S.streak;h.ok=true;h.won=true;S.xp+=g}
+  else{S.streak=0;h.ok=false;if(!S.miss.includes(q.id))S.miss.push(q.id)}
+  ses.gain=g;ses.xp+=g;ses.res.push(ok);save();render();
+  const v=$("#verdict");if(v&&v.scrollIntoView)v.scrollIntoView({block:"nearest",behavior:"smooth"})}
+
+function vEnd(){const r=ses.res.filter(Boolean).length,n=ses.res.length,miss=n-r;
+  return `<div class="stack"><span class="lbl">Round complete</span><h2>${r===n?"Clean round. That's the standard.":r>=n-1?"Close. One got away.":"Slow down. Accuracy comes first."}</h2></div>
+  <div class="strip"><div><span class="lbl">Correct</span><b>${r}/${n}</b></div><div><span class="lbl">XP earned</span><b>+${ses.xp}</b></div><div><span class="lbl">Rank</span><b style="font-size:18px">${RANKS[rank()][1]}</b></div></div>
+  ${miss?`<p>${miss} question${miss>1?"s":""} went to Rematch. Speed comes from understanding, so clear them before you start anything new.</p>`:`<p>Every answer right. Keep the same pace on the next round. Don't speed up.</p>`}
+  <div class="big">${S.miss.length?`<button class="primary" data-act="start" data-mode="rematch">Rematch now<small>${S.miss.length} waiting</small></button>`:""}
+  <button ${S.miss.length?"":'class="primary"'} data-act="start" data-mode="${ses.mode==="rematch"?"mix":ses.mode}">Another round</button><button data-act="quit">Back to drills</button></div>`}
+
+function vPlay(){return `<div class="stack"><h2>House rules</h2><p class="muted">The whole method fits on one page. Speed is a side effect of getting questions right.</p></div>
+  <ol class="rules">
+   <li><b>One question at a time, no clock.</b> You can't rush your way to a skill you don't have yet. Timing comes after accuracy.</li>
+   <li><b>Find the conclusion first.</b> Then ask why the evidence doesn't prove it. Most arguments on this test are broken on purpose.</li>
+   <li><b>Predict before you read the choices.</b> Four of the five are written to pull you off course. Arrive with your own answer.</li>
+   <li><b>One choice is right for a reason. Four are wrong for a reason.</b> If you're torn between two, you've missed something in the passage. Go back up, not sideways.</li>
+   <li><b>Review every miss until you could teach it.</b> A missed question is the most valuable thing you'll see all day. Don't move on confused.</li>
+   <li><b>Read the passage like you care.</b> For Reading Comp, slow reading and fast answers beats skimming and hunting.</li>
+  </ol>
+  <div class="stack"><h2>The test in one breath</h2>
+  <p>Three scored sections of 35 minutes: two Logical Reasoning, one Reading Comprehension. A fourth section is unscored and you won't know which one it is. Scores run 120 to 180. There are no logic games anymore. An unscored writing sample is taken separately.</p></div>
+  <h2>Question types</h2>`+
+  Object.keys(TYPES).map(t=>{const T=TYPES[t];return `<div class="card"><div class="row" style="justify-content:space-between"><h3>${T.n}</h3>${t!=="rc"?`<button data-act="start" data-mode="t:${t}">Drill it</button>`:""}</div>
+   <dl><dt>Asks</dt><dd>${T.ask}</dd><dt>Your move</dt><dd>${T.move}</dd><dt>Trap</dt><dd>${T.trap}</dd></dl></div>`}).join("")}
+
+const WHY=[["Misread it","Reread the passage one sentence at a time and restate each in your own words. Most misses start here."],["Didn't predict","Turn Predict first back on. Arriving without an answer is how trap choices win."],["Fell for the trap","Open this type in the Playbook and reread its trap. Then find the single word that makes your choice wrong."],["Rushed","There is no timer here. Slower and right beats faster and wrong every time."],["Didn't know the term","Go to Memory and flip the flashcard for it, then run a Terminology or If-Then round."]];
+const CARDS=[
+["Premise","A claim offered as support. It answers 'why should I believe that?'","Premises are the 'because' side of the argument."],
+["Conclusion","The claim the author wants you to accept. Everything else points at it.","Put 'therefore' in front. If it sounds right, it's the conclusion."],
+["Intermediate conclusion","A claim that is supported by a premise and then used to support the main conclusion.","A stepping stone: stood on, and standing on something."],
+["Assumption","An unstated claim the argument needs. The gap between the premises and the conclusion.","If it's written in the passage, it isn't an assumption."],
+["Sufficient condition","The trigger. If it happens, the other thing is guaranteed.","Sufficient = enough. It sits on the left of the arrow."],
+["Necessary condition","The requirement. Without it, the other thing can't happen.","Necessary = needed. It sits on the right of the arrow."],
+["Contrapositive","The same if-then, flipped and negated. If A then B becomes if not B then not A.","Flip and negate. Always both, never one."],
+["Mistaken reversal","Reading 'if A then B' as 'if B then A'.","Flipped without negating. Rain makes the lawn wet; a wet lawn doesn't prove rain."],
+["Mistaken negation","Reading 'if A then B' as 'if not A then not B'.","Negated without flipping. No rain doesn't prove a dry lawn."],
+["Some","At least one. Possibly all.","Some is a floor, not a ceiling."],
+["Most","More than half. Possibly all.","Most means majority, and all is a majority."],
+["Correlation","Two things that show up together. By itself it proves nothing about cause.","Together is not because."],
+["Causation","A claim that one thing produces another. The LSAT's favorite thing to attack.","Check ARC: Alternative cause, Reversed cause, Coincidence."],
+["Ad hominem","Attacking the person making an argument instead of the argument.","A bad messenger can carry a true message."],
+["Circular reasoning","Using the conclusion, reworded, as its own support.","It's true because it's true."],
+["Equivocation","A key word quietly changes meaning partway through the argument.","Same word, two jobs."],
+["Straw man","Restating an opponent's view as something weaker, then knocking that down.","Fighting a scarecrow instead of the farmer."],
+["False dilemma","Treating two options as the only ones when others exist.","Either-or with a missing 'or'."],
+["Part to whole","Assuming a group has a quality because each member does, or the reverse.","Great players, not necessarily a great team."],
+["Sampling flaw","Generalizing from a group that doesn't represent the population.","Don't survey gym members about exercise."],
+["Inference","Something that must be true given the passage. Not a guess, not probably.","If you can't point to the line, you can't pick it."],
+["Scope","The exact territory an argument covers. Wrong answers often wander outside it.","Ask: did the author ever talk about this?"],
+["Unless","Introduces a requirement. Replace it with 'if not'.","Unless, without, until, except: all mean 'if not'."],
+["Only if","Introduces the necessary condition, the right side of the arrow.","'Only' points at what's needed. 'If' alone points at the trigger."]
+];
+const HOOKS=[
+["S before N","Sufficient goes on the left of the arrow, necessary on the right. Think Saturday Night: S, then N."],
+["Trigger words","If, when, whenever, any, all, every, each. Whatever follows one of these goes on the left."],
+["Requirement words","Only, only if, must, requires, needs, depends on. Whatever follows goes on the right."],
+["The 'if not' four","Unless, without, until, except. Swap the word for 'if not' and translate as usual."],
+["Flip and negate","The contrapositive is the only safe move with an if-then. Flip both sides, negate both sides, and turn 'and' into 'or'."],
+["ARC","Every causal claim can be attacked three ways: Alternative cause, Reversed cause, Coincidence. To weaken, raise one. To strengthen, rule one out."],
+["Never climb the ladder","All proves most. Most proves some. You can walk down the ladder. You can never walk up."],
+["Kill test","For a necessary assumption, negate the choice. If the argument dies, the choice was necessary."],
+["Weak or strong","Necessary assumptions and Must Be True answers like soft words: some, can, at least. Sufficient assumptions like hard ones: all, any, never."],
+["Therefore test","Torn between two claims? Say 'A, therefore B' and 'B, therefore A'. The one that sounds right ends in the conclusion."],
+["Five-word jobs","After each Reading Comp paragraph, say what it did in five words. 'Old view.' 'Author objects.' 'Proposed fix.'"],
+["Who thinks what","In Reading Comp, track each viewpoint and whether the author agrees. Most questions are one of those two things."]
+];
+function nextCard(){for(let s=1;s<=CARDS.length;s++){const k=(mem.i+s)%CARDS.length;if(!S.known.includes(CARDS[k][0])){mem.i=k;break}}mem.flip=false}
+function vMem(){const kn=CARDS.filter(c=>S.known.includes(c[0])).length,all=kn===CARDS.length;
+  if(!all&&S.known.includes(CARDS[mem.i][0]))nextCard();const c=CARDS[mem.i];
+  return `<div class="stack"><h2>Flashcards</h2><p class="muted">${kn} of ${CARDS.length} terms known. Say the definition out loud before you flip.</p><div class="meter"><i style="width:${kn/CARDS.length*100}%"></i></div></div>
+  ${all?`<div class="card"><h3>Deck cleared</h3><p>You know all ${CARDS.length} terms. Test them under pressure with a Terminology round.</p><div class="row"><button class="primary" data-act="start" data-mode="t:term">Terminology round</button><button data-act="redeck">Go through the deck again</button></div></div>`:
+  `<button class="flash" data-act="flip" aria-label="Flip card"><span class="lbl">${mem.flip?"Definition":"Term · tap to flip"}</span><b>${c[0]}</b>${mem.flip?`<span>${c[1]}</span><span class="muted">Hook: ${c[2]}</span>`:""}</button>
+  <div class="row">${mem.flip?`<button class="primary" data-act="knew">Knew it</button><button data-act="again">Show me again later</button>`:`<button class="primary" data-act="flip">Flip</button><button data-act="again">Skip</button>`}</div>`}
+  <div class="stack"><h2>Memory hooks</h2><p class="muted">Short rules to say to yourself during a question. Learn them until they are automatic.</p></div>
+  <div class="hooks">${HOOKS.map(h=>`<div class="card"><h3>${h[0]}</h3><p>${h[1]}</p></div>`).join("")}</div>
+  <div class="stack"><h2>How to make it stick</h2><ol class="rules">
+   <li><b>Recall, don't reread.</b> Close the page and write the hook from memory. Struggling to remember is what builds the memory.</li>
+   <li><b>Space it out.</b> Ten minutes of flashcards on five days beats an hour on one.</li>
+   <li><b>Teach it.</b> Explain a missed question out loud as if to a friend. If you stall, that's the part you don't know yet.</li>
+   <li><b>Mix the types.</b> Once you know a type, practice it in mixed rounds so you have to recognize it yourself.</li>
+   <li><b>Sleep on it.</b> Review your misses before bed and again the next morning.</li></ol></div>
+  <div class="row"><button class="primary" data-act="start" data-mode="t:term">Terminology round</button><button data-act="start" data-mode="t:cond">If-Then round</button></div>`}
+function whyBlock(){const tot=WHY.reduce((a,_,k)=>a+(S.why[k]||0),0);if(!tot)return `<div class="stack"><h3>Why you miss</h3><p class="muted">After each miss, tag the reason. Your pattern shows up here.</p></div>`;
+  let top=0;WHY.forEach((_,k)=>{if((S.why[k]||0)>(S.why[top]||0))top=k});
+  return `<div class="stack"><h3>Why you miss</h3><div class="bars">${WHY.map((w,k)=>`<span>${w[0]}</span><div class="meter"><i style="width:${(S.why[k]||0)/tot*100}%"></i></div><span class="n">${S.why[k]||0}</span>`).join("")}</div><p><b>Your biggest leak: ${WHY[top][0].toLowerCase()}.</b> ${WHY[top][1]}</p></div>`}
+const REG=["I have an LSAC account","I chose the January test and how I'll take it","I paid and have my confirmation from LSAC"];
+function cells(){const ms=new Date(S.test+"T"+(S.time||"00:00"))-new Date();if(ms<=0)return `<div style="grid-column:1/-1"><b>Test day</b><span>Slow down. Read carefully. You've done this.</span></div>`;
+  const s=Math.floor(ms/1e3),p=n=>String(n).padStart(2,"0");
+  return `<div><b>${Math.floor(s/86400)}</b><span>Days</span></div><div><b>${p(Math.floor(s%86400/3600))}</b><span>Hours</span></div><div><b>${p(Math.floor(s%3600/60))}</b><span>Min</span></div><div><b>${p(s%60)}</b><span>Sec</span></div>`}
+function clock(){return `<div class="clock" id="clock" role="timer" aria-label="Countdown to your test">${cells()}</div>`}
+setInterval(()=>{const c=$("#clock");if(c&&S.test)c.innerHTML=cells()},1000);
+function fmt(d){return d.toLocaleDateString(undefined,{month:"short",day:"numeric"})}
+function vPlan(){const dl=daysLeft();if(S.quests.w!==weekKey())S.quests={w:weekKey(),done:[]};
+  const ph=[["Foundations",43,1e4,"Untimed drilling only. Learn every question type in the Playbook. Aim for clean rounds here, then do untimed official questions the same way."],
+   ["Timed sections",22,42,"Keep drilling daily. Add two or three official 35-minute sections a week. Never guess to finish. Do fewer questions and get them right."],
+   ["Full practice tests",4,21,"One or two full official tests a week under real conditions. Spend longer reviewing each test than you spent taking it."],
+   ["Taper",0,3,"Light drilling only. No new full tests. Sleep, confirm your test logistics, and trust the habit of slowing down."]];
+  const cur=dl===null?0:ph.findIndex(p=>dl>=p[1]&&dl<=p[2]);
+  const when=p=>{if(dl===null)return p[2]>=1e4?"Start here":p[1]===0?"Last 3 days":`${p[2]} to ${p[1]} days out`;
+    const t=new Date(S.test+"T00:00"),a=new Date(t),b=new Date(t);a.setDate(a.getDate()-Math.min(p[2],Math.max(dl,p[1])));b.setDate(b.getDate()-p[1]);
+    return p[2]>=1e4?`Now to ${fmt(b)}`:`${fmt(a)} to ${fmt(b)}`};
+  const paid=!!S.reg[2];
+  return `<div class="stack"><h2>Get registered</h2><p class="muted">You register and pay on LSAC's own site. This page only tracks that you did it, and never asks for your LSAC password or card.</p>
+   <div class="row"><a class="btn primary" style="background:var(--ink);color:var(--pad)" href="https://www.lsac.org/lsat" target="_blank" rel="noopener">Open LSAC to register ↗</a></div>
+   ${REG.map((q,k)=>`<label class="check"><input type="checkbox" id="reg${k}" data-act="reg" data-k="${k}" ${S.reg[k]?"checked":""}><span>${q}</span></label>`).join("")}</div>
+  <div class="stack"><h2>Countdown clock</h2>${paid&&S.test?clock():`<div class="gate"><p><b>${paid?"Almost there.":"Locked."}</b> ${paid?"Enter your test date below and the clock starts.":"The clock starts once you tick that you've paid"+(S.test?".":" and enter your test date below.")}</p></div>`}</div>
+  <div class="stack"><h2>Road to test day</h2>
+   <div class="row"><label class="lbl" for="testdate">Your test date</label><input type="date" id="testdate" value="${S.test}" min="${today()}"><label class="lbl" for="testtime">Start time</label><input type="time" id="testtime" value="${S.time||""}" style="font:inherit;font-family:var(--mono);padding:9px 10px;border:2px solid var(--ink);background:var(--paper);color:var(--ink)"></div>
+   <p class="muted">${dl===null?`Enter the date from your LSAC registration and the plan below will put dates on each phase.`:dl<0?"That date has passed. Set a new one to restart the plan.":`<b>${dl} days</b> to go. You are in the <b>${ph[Math.max(cur,0)][0]}</b> phase.`} Check dates and deadlines at <a href="https://www.lsac.org/lsat" target="_blank" rel="noopener">lsac.org</a>.</p></div>
+  <div>${ph.map((p,k)=>dl!==null&&dl>=0&&dl<p[1]?"":`<div class="phase ${k===cur&&dl!==null&&dl>=0?"now":""}"><div><h3>${p[0]}</h3><span class="when">${when(p)}${k===cur&&dl!==null&&dl>=0?" · you are here":""}</span></div><p>${p[3]}</p></div>`).join("")}</div>
+  <div class="stack"><h2>This week's quests</h2><p class="muted">Resets every Monday. The questions here are original practice. Your timed work should use official LSAT questions from LSAC's LawHub.</p>
+   ${QUESTS.map((q,k)=>`<label class="check"><input type="checkbox" id="quest${k}" data-act="quest" data-k="${k}" ${S.quests.done.includes(k)?"checked":""}><span>${q}</span></label>`).join("")}</div>`}
+
+function vProg(){const all=Q.length,w=Q.filter(q=>won(q.id)).length,att=Object.values(S.hist).reduce((a,h)=>a+h.n,0),r=rank(),nx=RANKS[r+1];
+  return `<div class="stack"><h2>Progress</h2><p class="muted">${nx?`${nx[0]-S.xp} XP to ${nx[1]}.`:"Top rank reached."} ${syncMsg}.</p></div>
+  <div class="strip"><div><span class="lbl">Beaten</span><b>${w}/${all}</b></div><div><span class="lbl">Answers locked</span><b>${att}</b></div><div><span class="lbl">Best run</span><b>${S.best}</b></div><div><span class="lbl">Rematch</span><b>${S.miss.length}</b></div></div>
+  <div class="stack"><h3>Mastery by type</h3><p class="muted">A question counts once your latest answer to it is correct.</p>
+  <div class="bars">${Object.keys(TYPES).map(t=>{const a=ofType(t),k=a.filter(q=>won(q.id)).length;return `<span>${TYPES[t].n}</span><div class="meter"><i style="width:${k/a.length*100}%"></i></div><span class="n">${k}/${a.length}</span>`}).join("")}</div></div>
+  ${whyBlock()}<div class="stack"><h3>Ranks</h3><div class="row">${RANKS.map((x,k)=>`<span class="lbl" style="${k<=r?"color:var(--ink);font-weight:600":""}">${k<=r?"● ":"○ "}${x[1]} ${x[0]}</span>`).join("")}</div></div>
+  <div class="row">${ses&&ses.reset?`<span>Erase all XP and history?</span><button data-act="reset2">Yes, erase</button><button data-act="quit">Keep it</button>`:`<button data-act="reset1">Reset progress</button>`}</div>`}
+
+document.addEventListener("click",e=>{const b=e.target.closest("[data-act]");if(!b||b.tagName==="INPUT")return;const a=b.dataset.act;
+  if(a==="start"){location.hash="drill";start(b.dataset.mode)}
+  else if(a==="show"){ses.shown=true;render()}
+  else if(a==="pick"){const d=document.querySelector("details.ruled");if(d)ses.open=d.open;ses.pick=+b.dataset.k;render()}
+  else if(a==="lock"){const d=document.querySelector("details.ruled");if(d)ses.open=d.open;lock()}
+  else if(a==="next"){if(ses.i+1<ses.list.length){ses.i++;ses.why=null;ses.pick=null;ses.locked=false;ses.shown=!S.predict;ses.open=false;render();window.scrollTo(0,0)}else{ses.done=true;render();window.scrollTo(0,0)}}
+  else if(a==="quit"){ses=null;render()}
+  else if(a==="why"){const k=+b.dataset.k;if(ses.why!=null)S.why[ses.why]=Math.max(0,(S.why[ses.why]||0)-1);ses.why=k;S.why[k]=(S.why[k]||0)+1;save();render()}
+  else if(a==="flip"){mem.flip=!mem.flip;render()}
+  else if(a==="knew"){const t=CARDS[mem.i][0];if(!S.known.includes(t))S.known.push(t);save();nextCard();render()}
+  else if(a==="again"){nextCard();render()}
+  else if(a==="redeck"){S.known=[];mem={i:0,flip:false};save();render()}
+  else if(a==="reset1"){ses={reset:true,done:false,list:[]};render()}
+  else if(a==="reset2"){const t=S.test,rg=S.reg,tm=S.time;S={reg:rg,time:tm,xp:0,streak:0,best:0,hist:{},miss:[],day:{d:"",n:0},ds:{last:"",n:0},test:t,predict:true,quests:{w:"",done:[]},known:[],why:{},t:0};ses=null;save();render()}
+});
+document.addEventListener("change",e=>{const t=e.target;
+  if(t.id==="testdate"){S.test=t.value;save();render()}
+  else if(t.id==="testtime"){S.time=t.value;save();render()}
+  else if(t.dataset.act==="reg"){S.reg[t.dataset.k]=t.checked;save();render()}
+  else if(t.dataset.act==="predict"){S.predict=t.checked;save()}
+  else if(t.dataset.act==="quest"){const k=+t.dataset.k;S.quests.done=S.quests.done.filter(x=>x!==k);if(t.checked)S.quests.done.push(k);save()}
+});
+window.addEventListener("hashchange",()=>{if(ses&&ses.reset)ses=null;render();window.scrollTo(0,0)});
+load();render();connect();
+</script>
+
+</body>
+</html>
