@@ -8,3 +8,7 @@ An untimed LSAT drilling game in a single HTML file. Open `index.html` in a brow
 - Study plan, registration tracker and countdown clock
 
 Progress is saved in the browser on the device you use. The questions are original practice material; use official LSAT questions from LSAC's LawHub for timed sections and full practice tests.
+
+## Also in this repository
+
+- [Recipe Checklist](recipe-checklist/): check off ingredients and steps while you cook, scale servings, and build a shopping list.
