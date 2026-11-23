@@ -86,6 +86,23 @@ label.field small{font-weight:400;color:var(--muted)}
 .empty{text-align:center;padding:32px 18px;display:flex;flex-direction:column;gap:12px;align-items:center}
 .toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--card);padding:10px 16px;border-radius:999px;font-weight:600;font-size:14px;box-shadow:0 4px 18px rgba(0,0,0,.2);max-width:calc(100% - 32px);text-align:center}
 .done-banner{background:var(--check);color:var(--card);border-radius:14px;padding:14px 18px;font-weight:600}
+.scan{display:flex;gap:14px;align-items:center;border-style:dashed;border-width:2px}
+.scan .ico{flex:0 0 44px;height:44px;border-radius:12px;background:var(--accent);color:var(--accent-ink);display:grid;place-items:center}
+.scan .ico svg{width:24px;height:24px}
+.scan div{flex:1;min-width:0}
+.scan p{font-size:14px;color:var(--muted)}
+.hero{display:block;width:100%;max-height:320px;object-fit:cover;border-radius:14px;border:1px solid var(--line)}
+.thumb{width:56px;height:56px;border-radius:10px;object-fit:cover;flex:0 0 56px}
+.recipe.has-thumb{grid-template-columns:56px 1fr auto}
+.recipe.has-thumb .bar{grid-column:1/-1}
+.busy{position:fixed;inset:0;background:rgba(10,16,13,.55);display:grid;place-items:center;padding:16px;z-index:10}
+.busy .card{max-width:360px;width:100%;display:flex;flex-direction:column;gap:12px;align-items:center;text-align:center}
+.busy img{width:120px;height:120px;object-fit:cover;border-radius:12px}
+.spin{width:28px;height:28px;border:3px solid var(--line);border-top-color:var(--accent);border-radius:50%;animation:spin .9s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+@media (prefers-reduced-motion:reduce){.spin{animation-duration:3s}}
+.note{background:var(--board);border-radius:10px;padding:10px 12px;font-size:14px}
+@media (max-width:520px){ .scan{flex-wrap:wrap} .scan div{flex:1 1 160px} .scan button{flex:1 1 100%;justify-content:center} }
 @media (max-width:420px){ header .wrap{flex-wrap:wrap} h2{font-size:23px} }
 </style>
 </head>
@@ -122,7 +139,7 @@ function load(){
   catch(e){ seed(); }
 }
 function seed(){ S.recipes = SAMPLES.map(r => newRecipe(r)); }
-function save(){ S.t = Date.now(); try{ localStorage.setItem(KEY, JSON.stringify(S)); }catch(e){} updateCount(); }
+function save(){ S.t = Date.now(); let ok = true; try{ localStorage.setItem(KEY, JSON.stringify(S)); }catch(e){ ok = false; } updateCount(); return ok; }
 function newRecipe(r){
   return { id: uid(), name: r.name, servings: r.servings || 4, scaleTo: r.servings || 4, tags: r.tags || "",
     ingredients: r.ingredients.map(text => ({ text, done: false })),
@@ -179,9 +196,11 @@ function viewLibrary(){
     .sort((a,b) => progress(b).d - progress(a).d || a.name.localeCompare(b.name));
   app.innerHTML = `
     <div class="spread"><h2>Your recipes</h2><a class="btn primary" href="#/new">+ New recipe</a></div>
+    ${scanCard("recipe", "Recipe from a photo", "Snap a recipe card, cookbook page or handwritten note and Claude types it in for you.")}
     ${S.recipes.length > 3 ? `<input type="search" id="q" placeholder="Search recipes or ingredients" value="${esc(sessionQuery||"")}" aria-label="Search recipes">` : ""}
     <div class="list">${list.map(r => { const p = progress(r); return `
-      <a class="card recipe" href="#/r/${r.id}">
+      <a class="card recipe${photoOk(r.photo) ? " has-thumb" : ""}" href="#/r/${r.id}">
+        ${photoOk(r.photo) ? `<img class="thumb" src="${r.photo}" alt="">` : ""}
         <div><h3>${esc(r.name)}</h3><div class="meta">${r.ingredients.length} ingredients · ${r.steps.length} steps${r.tags ? " · " + esc(r.tags) : ""}</div></div>
         <span class="pill ${p.d ? "go" : ""}">${p.d ? (p.d === p.all ? "Done" : "In progress") : "Serves " + r.servings}</span>
         ${p.d ? `<div class="bar" aria-hidden="true"><i style="width:${p.pct}%"></i></div>` : ""}
@@ -195,6 +214,7 @@ function viewLibrary(){
     </div>`;
   const qi = document.getElementById("q");
   if (qi) qi.addEventListener("input", () => { sessionQuery = qi.value; const pos = qi.selectionStart; viewLibrary(); const n = document.getElementById("q"); n.focus(); n.setSelectionRange(pos,pos); });
+  wireScan();
   document.getElementById("exp").onclick = exportData;
   document.getElementById("imp").onclick = () => document.getElementById("impFile").click();
   document.getElementById("impFile").onchange = importData;
@@ -208,6 +228,7 @@ function viewRecipe(id){
   const ingDone = r.ingredients.filter(i=>i.done).length, stDone = r.steps.filter(i=>i.done).length;
   app.innerHTML = `
     <div class="spread"><a class="btn ghost" href="#/">← Recipes</a><a class="btn" href="#/edit/${r.id}">Edit</a></div>
+    ${photoOk(r.photo) ? `<img class="hero" src="${r.photo}" alt="Photo for ${esc(r.name)}">` : ""}
     <div><h2>${esc(r.name)}</h2>${r.tags ? `<p class="muted">${esc(r.tags)}</p>` : ""}</div>
     ${p.all && p.d === p.all ? `<div class="done-banner">All done. Enjoy! <button class="ghost" style="color:inherit;text-decoration:underline" data-act="reset">Start fresh</button></div>` : ""}
     <div class="card spread">
@@ -258,26 +279,46 @@ function viewRecipe(id){
 }
 
 function viewEdit(id){
-  const r = id ? byId(id) : null; if (id && !r) return notFound();
+  const found = id ? byId(id) : null; if (id && !found) return notFound();
+  const draft = !id && pendingDraft ? pendingDraft : null; pendingDraft = null;
+  const r = found;
+  const v = found || draft;           // values that prefill the form
+  let photo = v && photoOk(v.photo) ? v.photo : "";
   app.innerHTML = `
     <div class="spread"><a class="btn ghost" href="${r ? "#/r/" + r.id : "#/"}">← Cancel</a></div>
-    <h2>${r ? "Edit recipe" : "New recipe"}</h2>
+    <h2>${r ? "Edit recipe" : draft ? "Check the recipe" : "New recipe"}</h2>
+    ${draft ? `<p class="note">Claude read this from your photo. Look it over, fix anything it got wrong, then tap <b>Save recipe</b>.${draft.note ? " " + esc(draft.note) : ""}</p>` : ""}
+    <div id="photoBox"></div>
     <form class="card" id="f" style="display:flex;flex-direction:column;gap:14px">
-      <label class="field">Name<input type="text" name="name" required maxlength="120" value="${r ? esc(r.name) : ""}" placeholder="e.g. Grandma's lemon cake"></label>
+      <label class="field">Name<input type="text" name="name" required maxlength="120" value="${v ? esc(v.name) : ""}" placeholder="e.g. Grandma's lemon cake"></label>
       <div class="row" style="gap:14px">
-        <label class="field" style="flex:0 0 120px">Servings<input type="number" name="servings" min="1" max="99" value="${r ? r.servings : 4}" required></label>
-        <label class="field" style="flex:1 1 200px">Tags <small>optional</small><input type="text" name="tags" maxlength="80" value="${r ? esc(r.tags) : ""}" placeholder="dinner, vegetarian"></label>
+        <label class="field" style="flex:0 0 120px">Servings<input type="number" name="servings" min="1" max="99" value="${v ? v.servings : 4}" required></label>
+        <label class="field" style="flex:1 1 200px">Tags <small>optional</small><input type="text" name="tags" maxlength="80" value="${v ? esc(v.tags) : ""}" placeholder="dinner, vegetarian"></label>
       </div>
       <label class="field">Ingredients <small>One per line. Start with the amount (2 cups, 1/2 tsp) so it scales.</small>
-        <textarea name="ingredients" required placeholder="2 cups flour&#10;1 tsp baking soda&#10;3 eggs">${r ? esc(r.ingredients.map(i=>i.text).join("\n")) : ""}</textarea></label>
+        <textarea name="ingredients" required placeholder="2 cups flour&#10;1 tsp baking soda&#10;3 eggs">${v ? esc(v.ingredients.map(i=>i.text).join("\n")) : ""}</textarea></label>
       <label class="field">Steps <small>One per line. Numbers and bullets are removed for you.</small>
-        <textarea name="steps" required placeholder="Heat the oven to 350°F.&#10;Whisk the dry ingredients.">${r ? esc(r.steps.map(i=>i.text).join("\n")) : ""}</textarea></label>
+        <textarea name="steps" required placeholder="Heat the oven to 350°F.&#10;Whisk the dry ingredients.">${v ? esc(v.steps.map(i=>i.text).join("\n")) : ""}</textarea></label>
       <div class="spread">
         <button class="primary" type="submit">${r ? "Save changes" : "Save recipe"}</button>
         ${r ? `<button type="button" class="danger" id="del">Delete recipe</button>` : ""}
       </div>
     </form>`;
   app.onchange = null; app.onclick = null;
+  const box = document.getElementById("photoBox");
+  const drawPhoto = () => {
+    box.innerHTML = photo
+      ? `<div class="card stack" style="display:flex;flex-direction:column;gap:10px"><img class="hero" src="${photo}" alt="Recipe photo"><div class="row"><button type="button" id="phChange">Change photo</button><button type="button" class="danger" id="phDel">Remove photo</button></div></div>`
+      : `<div class="row"><button type="button" id="phChange">+ Add a photo</button></div>`;
+    box.insertAdjacentHTML("beforeend", `<input type="file" id="phFile" accept="image/*" hidden>`);
+    document.getElementById("phChange").onclick = () => document.getElementById("phFile").click();
+    const d = document.getElementById("phDel"); if (d) d.onclick = () => { photo = ""; drawPhoto(); };
+    document.getElementById("phFile").onchange = async e => {
+      const file = e.target.files[0]; if (!file) return;
+      const p = await shrink(file); if (p) { photo = p; drawPhoto(); } else toast("Couldn't open that photo");
+    };
+  };
+  drawPhoto();
   const f = document.getElementById("f");
   f.onsubmit = e => {
     e.preventDefault();
@@ -289,10 +330,10 @@ function viewEdit(id){
       Object.assign(r, { name: d.get("name").trim(), tags: d.get("tags").trim(),
         ingredients: keep(r.ingredients, ing), steps: keep(r.steps, st) });
       if (r.servings !== servings) { r.servings = servings; r.scaleTo = servings; }
-      save(); location.hash = "#/r/" + r.id; toast("Saved");
+      setPhoto(r, photo); location.hash = "#/r/" + r.id;
     } else {
       const n = newRecipe({ name: d.get("name").trim(), servings, tags: d.get("tags").trim(), ingredients: ing, steps: st });
-      S.recipes.push(n); save(); location.hash = "#/r/" + n.id; toast("Recipe added");
+      S.recipes.push(n); setPhoto(n, photo, "Recipe added"); location.hash = "#/r/" + n.id;
     }
   };
   const del = document.getElementById("del");
@@ -304,6 +345,7 @@ function viewShopping(){
   const item = it => `<li><label><input type="checkbox" data-id="${it.id}" ${it.done ? "checked" : ""}><span>${esc(it.text)}${it.from ? `<span class="from">${esc(it.from)}</span>` : ""}</span></label></li>`;
   app.innerHTML = `
     <h2>Shopping list</h2>
+    ${scanCard("shopping", "List from a photo", "Snap a handwritten list or a recipe and Claude adds the items here.")}
     <form class="row" id="add" style="flex-wrap:nowrap">
       <input type="text" name="t" placeholder="Add an item" aria-label="Add an item" maxlength="160" style="flex:1">
       <button class="primary" type="submit">Add</button>
@@ -319,6 +361,7 @@ function viewShopping(){
       <div class="row"><button class="danger" id="clrAll">Clear whole list</button></div>`
     : `<div class="card empty"><h3>Nothing to buy</h3><p class="muted">Open a recipe and tap “Add to shopping list”, or type an item above.</p></div>`}`;
   app.onclick = null;
+  wireScan();
   app.onchange = e => { const c = e.target; if (!c.dataset.id) return; const it = S.shopping.find(s => s.id === c.dataset.id); if (it) { it.done = c.checked; save(); viewShopping(); } };
   document.getElementById("add").onsubmit = e => { e.preventDefault(); const v = e.target.t.value.trim(); if (!v) return; S.shopping.unshift({ id: uid(), text: v, from: "", done: false }); save(); viewShopping(); document.querySelector('#add input').focus(); };
   const clr = document.getElementById("clr"); if (clr) clr.onclick = () => { S.shopping = S.shopping.filter(i => !i.done); save(); viewShopping(); };
@@ -327,9 +370,120 @@ function viewShopping(){
 
 function notFound(){ app.innerHTML = `<div class="card empty"><h3>Recipe not found</h3><a class="btn primary" href="#/">Back to recipes</a></div>`; app.onchange = app.onclick = null; }
 
+/* ---------- photos ---------- */
+const photoOk = p => typeof p === "string" && /^data:image\/(jpeg|png|webp);base64,[A-Za-z0-9+/=]+$/.test(p);
+// Shrinks a picked photo to a small JPEG so many fit in the phone's storage.
+async function shrink(file, max = 900){
+  try{
+    const url = URL.createObjectURL(file);
+    const img = await new Promise((ok, bad) => { const i = new Image(); i.onload = () => ok(i); i.onerror = bad; i.src = url; });
+    const k = Math.min(1, max / Math.max(img.naturalWidth, img.naturalHeight));
+    const c = document.createElement("canvas"); c.width = Math.round(img.naturalWidth * k); c.height = Math.round(img.naturalHeight * k);
+    c.getContext("2d").drawImage(img, 0, 0, c.width, c.height); URL.revokeObjectURL(url);
+    return c.toDataURL("image/jpeg", .72);
+  }catch(e){ return ""; }
+}
+function setPhoto(r, photo, okMsg = "Saved"){
+  if (photo) r.photo = photo; else delete r.photo;
+  if (save()) return toast(okMsg);
+  delete r.photo; save(); toast("Saved, but your phone's storage is full so the photo wasn't kept");
+}
+
+/* ---------- Claude reads photos ---------- */
+let sampleApi = null, imgMax = 1, downloadsApi = null;
+(async () => {
+  if (!window.claude || typeof claude.use !== "function") return;
+  try{
+    const s = await claude.use("sample");
+    const lim = s ? await s.limits().catch(() => null) : null;
+    if (lim && lim.images) { sampleApi = s; imgMax = Math.max(1, lim.images.maxCount || 1); document.querySelectorAll(".scan").forEach(el => el.hidden = false); }
+  }catch(e){}
+})();
+(async () => { try{ if (window.claude && claude.use) downloadsApi = await claude.use("downloads"); }catch(e){} })();
+
+const CAM = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg>`;
+function scanCard(mode, title, text){
+  return `<div class="card scan" data-mode="${mode}" ${sampleApi ? "" : "hidden"}>
+    <span class="ico">${CAM}</span><div><h3>${title}</h3><p>${text}</p></div>
+    <button class="primary" data-scan>Choose photo</button>
+    <input type="file" accept="image/*" multiple hidden data-scanfile></div>`;
+}
+function wireScan(){
+  const card = app.querySelector(".scan"); if (!card) return;
+  const input = card.querySelector("[data-scanfile]");
+  card.querySelector("[data-scan]").onclick = () => input.click();
+  input.onchange = () => { const files = [...input.files].slice(0, imgMax); input.value = ""; if (files.length) scanPhotos(files, card.dataset.mode); };
+}
+
+const PROMPTS = {
+  recipe: `The attached photo(s) show a recipe: a cookbook page, recipe card, handwritten note or a screenshot. Several photos are pages of the same recipe.
+Read it and reply with only this JSON:
+{"name": string, "servings": number, "tags": string, "ingredients": [string], "steps": [string], "note": string}
+- ingredients: one per entry, amount and unit first exactly as written ("2 cups flour", "1/2 tsp salt"). Keep any section names out.
+- steps: one instruction per entry, without numbers or bullets.
+- servings: as stated; if not stated, your best estimate.
+- tags: 1 to 3 short lowercase words, comma separated (for example "dinner, bbq").
+- note: empty, or one short sentence about anything you could not read or had to guess.
+If the photo shows a finished dish with no written recipe, write a sensible home recipe for that dish and say so in note.
+If there is no food or recipe at all, reply {"error": "one short sentence saying what the photo shows"}.`,
+  shopping: `The attached photo(s) show a shopping list (handwritten or printed), a recipe, or food items.
+Reply with only this JSON: {"items": [string]}
+- A list: copy each item, one per entry, fixing obvious spelling.
+- A recipe: list its ingredients as things to buy, amount first ("2 lb brisket").
+- Food or an empty fridge/pantry: list the groceries shown that would need restocking.
+If nothing in the photo can become a shopping list, reply {"items": [], "error": "one short sentence saying what the photo shows"}.`
+};
+const SCAN_ERR = { not_granted: "Claude wasn't allowed to read photos on this page.", sampling_disabled: "Claude isn't available on this account.",
+  rate_limited: "Too many photos at once. Wait a minute and try again.", image_rejected: "That photo didn't work. Try a JPG or PNG.",
+  refused: "Claude couldn't read that photo. Try another one.", invalid_json: "Claude couldn't make sense of that photo. Try a clearer, closer shot.",
+  empty_completion: "Claude couldn't make sense of that photo. Try a clearer, closer shot.", session_expired: "Sign in to Claude again, then retry." };
+
+async function scanPhotos(files, mode){
+  if (!sampleApi) return;
+  const ctl = new AbortController();
+  const preview = await shrink(files[0], 300);
+  const ov = document.createElement("div"); ov.className = "busy";
+  ov.innerHTML = `<div class="card" role="status" aria-live="polite">${photoOk(preview) ? `<img src="${preview}" alt="">` : ""}<div class="spin" aria-hidden="true"></div>
+    <h3>Reading your photo…</h3><p class="muted" style="font-size:14px">This usually takes 10 to 30 seconds.</p><button type="button">Stop</button></div>`;
+  ov.querySelector("button").onclick = () => ctl.abort();
+  document.body.appendChild(ov);
+  try{
+    const out = await sampleApi.json(PROMPTS[mode], { images: files, signal: ctl.signal });
+    if (!out || typeof out !== "object") throw { code: "invalid_json" };
+    if (out.error && !(out.items && out.items.length) && !(out.ingredients && out.ingredients.length)) { toast(String(out.error).slice(0, 140)); return; }
+    const strs = a => Array.isArray(a) ? a.map(x => String(x).trim()).filter(Boolean).slice(0, 80) : [];
+    if (mode === "recipe") {
+      const ing = strs(out.ingredients), st = strs(out.steps);
+      if (!ing.length && !st.length) throw { code: "invalid_json" };
+      pendingDraft = { name: String(out.name || "Untitled recipe").slice(0, 120), servings: Math.max(1, Math.min(99, parseInt(out.servings, 10) || 4)),
+        tags: String(out.tags || "").slice(0, 80), ingredients: ing.map(text => ({ text })), steps: st.map(text => ({ text })),
+        note: String(out.note || "").slice(0, 240), photo: await shrink(files[0]) };
+      if (location.hash === "#/new") route(); else location.hash = "#/new";
+    } else {
+      const items = strs(out.items);
+      if (!items.length) throw { code: "invalid_json" };
+      const have = new Set(S.shopping.filter(s => !s.done).map(s => s.text.toLowerCase()));
+      const fresh = items.filter(t => !have.has(t.toLowerCase()));
+      S.shopping.unshift(...fresh.map(text => ({ id: uid(), text, from: "From your photo", done: false })));
+      save(); viewShopping();
+      toast(fresh.length ? `Added ${fresh.length} item${fresh.length === 1 ? "" : "s"} from your photo` : "Those items are already on your list");
+    }
+  }catch(e){
+    const code = e && e.code;
+    if (code === "not_granted" || code === "sampling_disabled") { sampleApi = null; document.querySelectorAll(".scan").forEach(el => el.hidden = true); }
+    if (code !== "cancelled") toast(SCAN_ERR[code] || "Something went wrong reading the photo. Try again.");
+  }finally{ ov.remove(); }
+}
+let pendingDraft = null;
+
 /* ---------- backup ---------- */
 function exportData(){
-  const blob = new Blob([JSON.stringify({ app: "recipe-checklist", version: 1, recipes: S.recipes, shopping: S.shopping }, null, 2)], { type: "application/json" });
+  const json = JSON.stringify({ app: "recipe-checklist", version: 1, recipes: S.recipes, shopping: S.shopping }, null, 2);
+  if (downloadsApi) {
+    downloadsApi.save({ filename: "recipes-backup.json", data: json }).catch(e => { if (e && e.code !== "declined") toast("Couldn't save the backup here"); });
+    return;
+  }
+  const blob = new Blob([json], { type: "application/json" });
   const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = "recipes-backup.json"; document.body.appendChild(a); a.click(); a.remove();
   setTimeout(() => URL.revokeObjectURL(a.href), 1000);
 }
